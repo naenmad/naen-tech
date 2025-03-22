@@ -96,7 +96,7 @@ const ContactPage = () => {
               WebkitTextFillColor: "transparent",
             }}
           >
-            Contact Me
+            Let's Connect
           </span>
         </h2>
         <p
@@ -104,7 +104,7 @@ const ContactPage = () => {
           data-aos-duration="1100"
           className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base mt-2"
         >
-          Got a question? Send me a message, and I'll get back to you soon.
+          Have something to discuss? Send me a message and let's talk.
         </p>
       </div>
 

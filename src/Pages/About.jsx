@@ -205,7 +205,7 @@ const AboutPage = () => {
                 data-aos="fade-right"
                 data-aos-duration="1300"
               >
-                Eki Zulfar Rachman
+                Ahmad Zulkarnaen
               </span>
             </h2>
             
@@ -214,10 +214,11 @@ const AboutPage = () => {
               data-aos="fade-right"
               data-aos-duration="1500"
             >
-              seorang siswa Teknik Jaringan Komputer dan Telekomunikasi yang
-              tertarik dalam pengembangan Front-End. Saya berfokus pada
-              menciptakan pengalaman digital yang menarik dan selalu berusaha
-              memberikan solusi terbaik dalam setiap proyek.
+              Seorang mahasiswa Informatika yang tertarik kepada bidang Software
+              Engineering. Saya bercita-cita untuk memberikan dampak positif
+              melalui teknologi dan berkontribusi dalam pengembangan produk
+              yang bermanfaat bagi masyarakat. Saya juga memiliki pengalaman
+              dalam pengembangan aplikasi berbasis web dan mobile.
             </p>
 
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 lg:gap-4 lg:px-0 w-full">
