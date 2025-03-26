@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import { db, collection } from "../firebase";
 import { getDocs } from "firebase/firestore";
 import PropTypes from "prop-types";
-import SwipeableViews from "react-swipeable-views";
 import { useTheme } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import Tabs from "@mui/material/Tabs";
@@ -15,6 +14,14 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import Certificate from "../components/Certificate";
 import { Code, Award, Boxes } from "lucide-react";
+
+// Import Swiper components
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { EffectFade, Keyboard } from 'swiper/modules';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/effect-fade';
 
 // Separate ShowMore/ShowLess button component
 const ToggleButton = ({ onClick, isShowingMore }) => (
@@ -80,7 +87,7 @@ function TabPanel({ children, value, index, ...other }) {
     >
       {value === index && (
         <Box sx={{ p: { xs: 1, sm: 3 } }}>
-          <Typography>{children}</Typography>
+          <Typography component="div">{children}</Typography>
         </Box>
       )}
     </div>
@@ -124,6 +131,9 @@ export default function FullWidthTabs() {
   const [showAllCertificates, setShowAllCertificates] = useState(false);
   const isMobile = window.innerWidth < 768;
   const initialItems = isMobile ? 4 : 6;
+  
+  // Reference to Swiper instance
+  const [swiperInstance, setSwiperInstance] = useState(null);
 
   useEffect(() => {
     // Initialize AOS once
@@ -167,6 +177,13 @@ export default function FullWidthTabs() {
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    if (swiperInstance) {
+      swiperInstance.slideTo(newValue);
+    }
+  };
+
+  const handleSlideChange = (swiper) => {
+    setValue(swiper.activeIndex);
   };
 
   const toggleShowMore = useCallback((type) => {
@@ -289,81 +306,94 @@ export default function FullWidthTabs() {
           </Tabs>
         </AppBar>
 
-        <SwipeableViews
-          axis={theme.direction === "rtl" ? "x-reverse" : "x"}
-          index={value}
-          onChangeIndex={setValue}
+        {/* Replace SwipeableViews with Swiper */}
+        <Swiper
+          modules={[EffectFade, Keyboard]}
+          effect="fade" 
+          fadeEffect={{ crossFade: true }}
+          initialSlide={value}
+          onSlideChange={handleSlideChange}
+          onSwiper={setSwiperInstance}
+          keyboard={{ enabled: true }}
+          allowTouchMove={false}
+          className="portfolio-swiper"
         >
-          <TabPanel value={value} index={0} dir={theme.direction}>
-            <div className="container mx-auto flex justify-center items-center overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
-                {displayedProjects.map((project, index) => (
-                  <div
-                    key={project.id || index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <CardProject
-                      Img={project.Img}
-                      Title={project.Title}
-                      Description={project.Description}
-                      Link={project.Link}
-                      id={project.id}
-                    />
-                  </div>
-                ))}
+          <SwiperSlide>
+            <TabPanel value={value} index={0} dir={theme.direction}>
+              <div className="container mx-auto flex justify-center items-center overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
+                  {displayedProjects.map((project, index) => (
+                    <div
+                      key={project.id || index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <CardProject
+                        Img={project.Img}
+                        Title={project.Title}
+                        Description={project.Description}
+                        Link={project.Link}
+                        id={project.id}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            {projects.length > initialItems && (
-              <div className="mt-6 w-full flex justify-start">
-                <ToggleButton
-                  onClick={() => toggleShowMore('projects')}
-                  isShowingMore={showAllProjects}
-                />
-              </div>
-            )}
-          </TabPanel>
+              {projects.length > initialItems && (
+                <div className="mt-6 w-full flex justify-start">
+                  <ToggleButton
+                    onClick={() => toggleShowMore('projects')}
+                    isShowingMore={showAllProjects}
+                  />
+                </div>
+              )}
+            </TabPanel>
+          </SwiperSlide>
 
-          <TabPanel value={value} index={1} dir={theme.direction}>
-            <div className="container mx-auto flex justify-center items-center overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4">
-                {displayedCertificates.map((certificate, index) => (
-                  <div
-                    key={index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <Certificate ImgSertif={certificate.Img} />
-                  </div>
-                ))}
+          <SwiperSlide>
+            <TabPanel value={value} index={1} dir={theme.direction}>
+              <div className="container mx-auto flex justify-center items-center overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4">
+                  {displayedCertificates.map((certificate, index) => (
+                    <div
+                      key={index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <Certificate ImgSertif={certificate.Img} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            {certificates.length > initialItems && (
-              <div className="mt-6 w-full flex justify-start">
-                <ToggleButton
-                  onClick={() => toggleShowMore('certificates')}
-                  isShowingMore={showAllCertificates}
-                />
-              </div>
-            )}
-          </TabPanel>
+              {certificates.length > initialItems && (
+                <div className="mt-6 w-full flex justify-start">
+                  <ToggleButton
+                    onClick={() => toggleShowMore('certificates')}
+                    isShowingMore={showAllCertificates}
+                  />
+                </div>
+              )}
+            </TabPanel>
+          </SwiperSlide>
 
-          <TabPanel value={value} index={2} dir={theme.direction}>
-            <div className="container mx-auto flex justify-center items-center overflow-hidden pb-[5%]">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-8 gap-5">
-                {techStacks.map((stack, index) => (
-                  <div
-                    key={index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <TechStackIcon TechStackIcon={stack.icon} Language={stack.language} />
-                  </div>
-                ))}
+          <SwiperSlide>
+            <TabPanel value={value} index={2} dir={theme.direction}>
+              <div className="container mx-auto flex justify-center items-center overflow-hidden pb-[5%]">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-8 gap-5">
+                  {techStacks.map((stack, index) => (
+                    <div
+                      key={index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <TechStackIcon TechStackIcon={stack.icon} Language={stack.language} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </TabPanel>
-        </SwipeableViews>
+            </TabPanel>
+          </SwiperSlide>
+        </Swiper>
       </Box>
     </div>
   );

@@ -1,9 +1,14 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { 
+  BrowserRouter,
+  createBrowserRouter,
+  RouterProvider 
+} from 'react-router-dom';
 import React, { useState } from 'react';
 import "./index.css";
 import Home from "./Pages/Home";
 import About from "./Pages/About";
 import AnimatedBackground from "./components/Background";
+import Error from "./Pages/Error";
 import Navbar from "./components/Navbar";
 import Portofolio from "./Pages/Portofolio";
 import ContactPage from "./Pages/Contact";
@@ -66,14 +71,53 @@ const ProjectPageLayout = () => (
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
+  
+  const routes = [
+    {
+      path: "/",
+      element: <LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />
+    },
+    {
+      path: "/project/:id",
+      element: <ProjectPageLayout />
+    },
+    {
+      path: "*",
+      element: <Error />
+    },
+    {
+      path: "/404",
+      element: <Error errorCode="404" errorMessage="Halaman tidak ditemukan" />
+    },
+    {
+      path: "/500",
+      element: <Error errorCode="500" errorMessage="Kesalahan server" />
+    }
+  ];
+
+  const router = createBrowserRouter(routes, {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true
+    }
+  });
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
-        <Route path="/project/:id" element={<ProjectPageLayout />} />
-      </Routes>
-    </BrowserRouter>
+    <RouterProvider 
+      router={router} 
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+        v7_fetcherPersist: true,
+        v7_normalizeFormMethod: true,
+        v7_partialHydration: true,
+        v7_skipActionErrorRevalidation: true
+      }}
+    />
   );
 }
 
