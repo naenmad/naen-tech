@@ -44,11 +44,6 @@ const CardProject = ({ Img, Title, Description, Link: ProjectLink, id }) => {
             <div className="text-gray-300/80 text-sm leading-relaxed line-clamp-2">
               {Description}
             </div>
-
-            <div className="description-container">
-              <div className="text-gray-300/80 text-sm mb-2">First paragraph</div>
-              <div className="text-gray-300/80 text-sm">Second paragraph</div>
-            </div>
             
             <div className="pt-4 flex items-center justify-between">
               {ProjectLink ? (

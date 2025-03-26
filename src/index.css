@@ -20,6 +20,12 @@ body {
 	scroll-behavior: smooth !important;
 }
 
+html,
+:host {
+    /* -webkit-text-size-adjust: 100%; For older WebKit/Blink browsers */
+    text-size-adjust: 100%; /* Standard property for modern browsers */
+}
+
 @keyframes blob {
 	0%,
 	100% {
@@ -107,6 +113,18 @@ body {
    animation: shine 1.5s ease-in-out infinite;
  }
 
+@keyframes swal2-toast-animate-success-line-tip {
+    0% {
+        top: .5625em;
+        left: .0625em;
+        transform: scaleX(0); /* Start with no width */
+    }
+    100% {
+        top: .5625em;
+        left: .0625em;
+        transform: scaleX(1); /* Scale to full width */
+    }
+}
   
 /*   @media (prefers-color-scheme: dark) {
 	::-webkit-scrollbar-track {
