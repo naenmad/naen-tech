@@ -214,15 +214,14 @@ const AboutPage = () => {
               data-aos="fade-right"
               data-aos-duration="1500"
             >
-              Seorang mahasiswa Informatika yang tertarik kepada bidang Software
-              Engineering. Saya bercita-cita untuk memberikan dampak positif
-              melalui teknologi dan berkontribusi dalam pengembangan produk
-              yang bermanfaat bagi masyarakat. Saya juga memiliki pengalaman
-              dalam pengembangan aplikasi berbasis web dan mobile.
+              A Computer Science student interested in the field of Software Engineering.
+              I aspire to make a positive impact through technology and contribute to the
+              development of products that benefit society. I also have experience in
+              developing web-based and mobile applications.
             </p>
 
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-4 lg:gap-4 lg:px-0 w-full">
-              <a href="https://drive.google.com/file/d/1cAjD_salGCoMYOjMp8I5f2f7uWpdWp5E/view?usp=sharing" className="w-full lg:w-auto">
+              <a href="/cv.pdf" className="w-full lg:w-auto">
               <button 
                 data-aos="fade-up"
                 data-aos-duration="800"
