@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { db, collection } from "../firebase";
-import { getDocs } from "firebase/firestore";
+import { db, collection, getDocs, testFirebaseConnection } from "../firebase";
 import PropTypes from "prop-types";
 import { useTheme } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
@@ -135,6 +134,10 @@ export default function FullWidthTabs() {
   // Reference to Swiper instance
   const [swiperInstance, setSwiperInstance] = useState(null);
 
+  // Add these states
+  const [isLoading, setIsLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState(null);
+
   useEffect(() => {
     // Initialize AOS once
     AOS.init({
@@ -143,14 +146,23 @@ export default function FullWidthTabs() {
   }, []);
 
   const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setConnectionError(null);
+    console.log("🔥 Starting Firebase connection check...");
     try {
+      console.log("Creating collection references...");
       const projectCollection = collection(db, "projects");
       const certificateCollection = collection(db, "certificates");
 
+      console.log("Attempting to fetch data from Firebase...");
       const [projectSnapshot, certificateSnapshot] = await Promise.all([
         getDocs(projectCollection),
         getDocs(certificateCollection),
       ]);
+
+      console.log("✅ Firebase connection successful!");
+      console.log("Projects found:", projectSnapshot.docs.length);
+      console.log("Certificates found:", certificateSnapshot.docs.length);
 
       const projectData = projectSnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -160,19 +172,36 @@ export default function FullWidthTabs() {
 
       const certificateData = certificateSnapshot.docs.map((doc) => doc.data());
 
+      console.log("First project:", projectData[0] || "No projects found");
+      console.log("First certificate:", certificateData[0] || "No certificates found");
+
       setProjects(projectData);
       setCertificates(certificateData);
 
       // Store in localStorage
       localStorage.setItem("projects", JSON.stringify(projectData));
       localStorage.setItem("certificates", JSON.stringify(certificateData));
+      setIsLoading(false);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("❌ Firebase connection error:", error);
+      console.error("Error details:", {
+        code: error.code, 
+        message: error.message,
+        stack: error.stack
+      });
+      setConnectionError(error.message);
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
+    // Test the connection first
+    testFirebaseConnection().then(result => {
+      console.log("Firebase connection test result:", result);
+      if (result.success) {
+        fetchData();
+      }
+    });
   }, [fetchData]);
 
   const handleChange = (event, newValue) => {
@@ -199,6 +228,26 @@ export default function FullWidthTabs() {
 
   return (
     <div className="md:px-[10%] px-[5%] w-full sm:mt-0 mt-[3rem] bg-[#030014] overflow-hidden" id="Portofolio">
+      {/* Add loading and error states */}
+      {isLoading && (
+        <div className="text-center py-10">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
+          <p className="mt-2 text-slate-400">Connecting to Firebase...</p>
+        </div>
+      )}
+
+      {connectionError && (
+        <div className="text-center py-10 text-red-500">
+          <p>Firebase connection error: {connectionError}</p>
+          <button 
+            onClick={fetchData} 
+            className="mt-4 px-4 py-2 bg-purple-600 rounded-md text-white"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
+
       {/* Header section - unchanged */}
       <div className="text-center pb-10" data-aos="fade-up" data-aos-duration="1000">
         <h2 className="inline-block text-3xl md:text-5xl font-bold text-center mx-auto text-transparent bg-clip-text bg-gradient-to-r from-[#6366f1] to-[#a855f7]">

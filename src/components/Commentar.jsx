@@ -1,29 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { getDocs, addDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase-comment';
-import { MessageCircle, UserCircle2, Loader2, AlertCircle, Send, ImagePlus, X } from 'lucide-react';
+import { getDocs, addDoc, collection, onSnapshot, query, orderBy, serverTimestamp, updateDoc, doc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { MessageCircle, UserCircle2, Loader2, AlertCircle, Send, Heart } from 'lucide-react';
 import AOS from "aos";
 import "aos/dist/aos.css";
 
-const Comment = memo(({ comment, formatDate, index }) => (
+const Comment = memo(({ comment, formatDate, index, onLike }) => (
     <div 
         className="px-4 pt-4 pb-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group hover:shadow-lg hover:-translate-y-0.5"
-        
     >
         <div className="flex items-start gap-3 ">
-            {comment.profileImage ? (
-                <img
-                    src={comment.profileImage}
-                    alt={`${comment.userName}'s profile`}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-indigo-500/30"
-                    loading="lazy"
-                />
-            ) : (
-                <div className="p-2 rounded-full bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/30 transition-colors">
-                    <UserCircle2 className="w-5 h-5" />
-                </div>
-            )}
+            <div className="p-2 rounded-full bg-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/30 transition-colors">
+                <UserCircle2 className="w-5 h-5" />
+            </div>
             <div className="flex-grow min-w-0">
                 <div className="flex items-center justify-between gap-4 mb-2">
                     <h4 className="font-medium text-white truncate">{comment.userName}</h4>
@@ -32,6 +21,15 @@ const Comment = memo(({ comment, formatDate, index }) => (
                     </span>
                 </div>
                 <p className="text-gray-300 text-sm break-words leading-relaxed relative bottom-2">{comment.content}</p>
+                <div className="mt-2 flex items-center gap-2">
+                    <button 
+                        onClick={() => onLike(comment.id)} 
+                        className="flex items-center gap-1 text-xs py-1 px-2 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors"
+                    >
+                        <Heart className={`w-3 h-3 ${comment.liked ? 'fill-indigo-400' : ''}`} />
+                        <span>{comment.likes || 0}</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -40,21 +38,7 @@ const Comment = memo(({ comment, formatDate, index }) => (
 const CommentForm = memo(({ onSubmit, isSubmitting, error }) => {
     const [newComment, setNewComment] = useState('');
     const [userName, setUserName] = useState('');
-    const [imagePreview, setImagePreview] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
     const textareaRef = useRef(null);
-    const fileInputRef = useRef(null);
-
-    const handleImageChange = useCallback((e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) return;
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setImagePreview(reader.result);
-            reader.readAsDataURL(file);
-        }
-    }, []);
 
     const handleTextareaChange = useCallback((e) => {
         setNewComment(e.target.value);
@@ -68,13 +52,10 @@ const CommentForm = memo(({ onSubmit, isSubmitting, error }) => {
         e.preventDefault();
         if (!newComment.trim() || !userName.trim()) return;
         
-        onSubmit({ newComment, userName, imageFile });
+        onSubmit({ newComment, userName });
         setNewComment('');
-        setImagePreview(null);
-        setImageFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    }, [newComment, userName, imageFile, onSubmit]);
+    }, [newComment, userName, onSubmit]);
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -106,56 +87,6 @@ const CommentForm = memo(({ onSubmit, isSubmitting, error }) => {
                 />
             </div>
 
-            <div className="space-y-2" data-aos="fade-up" data-aos-duration="1400">
-                <label className="block text-sm font-medium text-white">
-                    Profile Photo <span className="text-gray-400">(optional)</span>
-                </label>
-                <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
-                    {imagePreview ? (
-                        <div className="flex items-center gap-4">
-                            <img
-                                src={imagePreview}
-                                alt="Profile preview"
-                                className="w-16 h-16 rounded-full object-cover border-2 border-indigo-500/50"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setImagePreview(null);
-                                    setImageFile(null);
-                                    if (fileInputRef.current) fileInputRef.current.value = '';
-                                }}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all group"
-                            >
-                                <X className="w-4 h-4" />
-                                <span>Remove Photo</span>
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="w-full" >
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleImageChange}
-                                accept="image/*"
-                                className="hidden"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 transition-all border border-dashed border-indigo-500/50 hover:border-indigo-500 group"
-                            >
-                                <ImagePlus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                                <span>Choose Profile Photo</span>
-                            </button>
-                            <p className="text-center text-gray-400 text-sm mt-2">
-                                Max file size: 5MB
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
             <button
                 type="submit"
                 disabled={isSubmitting}
@@ -181,7 +112,7 @@ const CommentForm = memo(({ onSubmit, isSubmitting, error }) => {
     );
 });
 
-const Komentar = () => {
+const Commentar = () => {
     const [comments, setComments] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -199,32 +130,33 @@ const Komentar = () => {
         const q = query(commentsRef, orderBy('createdAt', 'desc'));
         
         return onSnapshot(q, (querySnapshot) => {
-            const commentsData = querySnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
+            const commentsData = querySnapshot.docs.map((doc) => {
+                const data = doc.data();
+                // Console log to debug
+                console.log("Comment data from Firebase:", data);
+                return {
+                    id: doc.id,
+                    ...data,
+                    // Ensure createdAt exists for rendering
+                    createdAt: data.createdAt || { toDate: () => new Date() }
+                };
+            });
+            console.log("Processed comments:", commentsData);
             setComments(commentsData);
         });
     }, []);
 
-    const uploadImage = useCallback(async (imageFile) => {
-        if (!imageFile) return null;
-        const storageRef = ref(storage, `profile-images/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(storageRef, imageFile);
-        return getDownloadURL(storageRef);
-    }, []);
-
-    const handleCommentSubmit = useCallback(async ({ newComment, userName, imageFile }) => {
+    const handleCommentSubmit = useCallback(async ({ newComment, userName }) => {
         setError('');
         setIsSubmitting(true);
         
         try {
-            const profileImageUrl = await uploadImage(imageFile);
             await addDoc(collection(db, 'portfolio-comments'), {
                 content: newComment,
                 userName,
-                profileImage: profileImageUrl,
                 createdAt: serverTimestamp(),
+                likes: 0,
+                liked: false,
             });
         } catch (error) {
             setError('Failed to post comment. Please try again.');
@@ -232,7 +164,22 @@ const Komentar = () => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [uploadImage]);
+    }, []);
+
+    const handleLike = useCallback(async (commentId) => {
+        const commentRef = doc(db, 'portfolio-comments', commentId);
+        const comment = comments.find((c) => c.id === commentId);
+        if (!comment) return;
+
+        try {
+            await updateDoc(commentRef, {
+                likes: comment.liked ? comment.likes - 1 : comment.likes + 1,
+                liked: !comment.liked,
+            });
+        } catch (error) {
+            console.error('Error updating like: ', error);
+        }
+    }, [comments]);
 
     const formatDate = useCallback((timestamp) => {
         if (!timestamp) return '';
@@ -256,64 +203,65 @@ const Komentar = () => {
 
     return (
         <div className="w-full bg-gradient-to-b from-white/10 to-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl" data-aos="fade-up" data-aos-duration="1000">
-        <div className="p-6 border-b border-white/10" data-aos="fade-down" data-aos-duration="800">
-            <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-indigo-500/20">
-                    <MessageCircle className="w-6 h-6 text-indigo-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-white">
-                    Comments <span className="text-indigo-400">({comments.length})</span>
-                </h3>
-            </div>
-        </div>
-        <div className="p-6 space-y-6">
-            {error && (
-                <div className="flex items-center gap-2 p-4 text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl" data-aos="fade-in">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <p className="text-sm">{error}</p>
-                </div>
-            )}
-            
-            <div >
-                <CommentForm onSubmit={handleCommentSubmit} isSubmitting={isSubmitting} error={error} />
-            </div>
-
-            <div className="space-y-4 h-[300px] overflow-y-auto custom-scrollbar" data-aos="fade-up" data-aos-delay="200">
-                {comments.length === 0 ? (
-                    <div className="text-center py-8" data-aos="fade-in">
-                        <UserCircle2 className="w-12 h-12 text-indigo-400 mx-auto mb-3 opacity-50" />
-                        <p className="text-gray-400">No comments yet. Start the conversation!</p>
+            <div className="p-6 border-b border-white/10" data-aos="fade-down" data-aos-duration="800">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-indigo-500/20">
+                        <MessageCircle className="w-6 h-6 text-indigo-400" />
                     </div>
-                ) : (
-                    comments.map((comment, index) => (
-                        <Comment 
-                            key={comment.id} 
-                            comment={comment} 
-                            formatDate={formatDate}
-                            index={index}
-                        />
-                    ))
-                )}
+                    <h3 className="text-xl font-semibold text-white">
+                        Comments <span className="text-indigo-400">({comments.length})</span>
+                    </h3>
+                </div>
             </div>
+            <div className="p-6 space-y-6">
+                {error && (
+                    <div className="flex items-center gap-2 p-4 text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl" data-aos="fade-in">
+                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <p className="text-sm">{error}</p>
+                    </div>
+                )}
+                
+                <div >
+                    <CommentForm onSubmit={handleCommentSubmit} isSubmitting={isSubmitting} error={error} />
+                </div>
+
+                <div className="space-y-4 h-[300px] overflow-y-auto custom-scrollbar" data-aos="fade-up" data-aos-delay="200">
+                    {comments.length === 0 ? (
+                        <div className="text-center py-8" data-aos="fade-in">
+                            <UserCircle2 className="w-12 h-12 text-indigo-400 mx-auto mb-3 opacity-50" />
+                            <p className="text-gray-400">No comments yet. Start the conversation!</p>
+                        </div>
+                    ) : (
+                        comments.map((comment, index) => (
+                            <Comment 
+                                key={comment.id} 
+                                comment={comment} 
+                                formatDate={formatDate}
+                                index={index}
+                                onLike={handleLike}
+                            />
+                        ))
+                    )}
+                </div>
+            </div>
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(99, 102, 241, 0.5);
+                    border-radius: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(99, 102, 241, 0.7);
+                }
+            `}</style>
         </div>
-        <style>{`
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: rgba(99, 102, 241, 0.5);
-                border-radius: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: rgba(99, 102, 241, 0.7);
-            }
-        `}</style>
-    </div>
     );
 };
 
-export default Komentar;
+export default Commentar;

@@ -12,7 +12,7 @@ import EasterEgg from './Pages/EasterEgg';
 import Error from "./Pages/Error";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Portofolio from "./Pages/Portofolio";
+import Portfolio from "./Pages/Portfolio";
 import Posts from './Pages/Posts';
 import ContactPage from "./Pages/Contact";
 import ProjectDetails from "./components/ProjectDetail";
@@ -37,7 +37,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           <Home />
           <About />
           <Posts />
-          <Portofolio />
+          <Portfolio />
           <ContactPage />
           <Footer />
           <TerminalConsole />
