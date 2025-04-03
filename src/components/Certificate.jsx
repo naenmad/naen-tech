@@ -1,10 +1,12 @@
 import React, { useState } from "react"
-import { Modal, IconButton, Box, Fade, Backdrop, Zoom, Typography } from "@mui/material"
+import { Modal, IconButton, Box, Typography } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close"
 import FullscreenIcon from "@mui/icons-material/Fullscreen"
+import { useTheme } from "../contexts/ThemeContext"
 
 const Certificate = ({ ImgSertif }) => {
 	const [open, setOpen] = useState(false)
+	const { isDarkMode } = useTheme()
 
 	const handleOpen = () => {
 		setOpen(true)
@@ -23,11 +25,15 @@ const Certificate = ({ ImgSertif }) => {
 					position: "relative",
 					overflow: "hidden",
 					borderRadius: 2,
-					boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+					boxShadow: isDarkMode
+						? "0 8px 16px rgba(0,0,0,0.3)"
+						: "0 8px 16px rgba(0,0,0,0.1)",
 					transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
 					"&:hover": {
 						transform: "translateY(-5px)",
-						boxShadow: "0 12px 24px rgba(0,0,0,0.2)",
+						boxShadow: isDarkMode
+							? "0 12px 24px rgba(0,0,0,0.4)"
+							: "0 12px 24px rgba(0,0,0,0.2)",
 						"& .overlay": {
 							opacity: 1,
 						},
@@ -36,7 +42,9 @@ const Certificate = ({ ImgSertif }) => {
 							opacity: 1,
 						},
 						"& .certificate-image": {
-							filter: "contrast(1.05) brightness(1) saturate(1.1)",
+							filter: isDarkMode
+								? "contrast(1.05) brightness(1.05) saturate(1.1)"
+								: "contrast(1.05) brightness(1) saturate(1.1)",
 						},
 					},
 				}}>
@@ -51,7 +59,9 @@ const Certificate = ({ ImgSertif }) => {
 							left: 0,
 							right: 0,
 							bottom: 0,
-							backgroundColor: "rgba(0, 0, 0, 0.1)",
+							backgroundColor: isDarkMode
+								? "rgba(0, 0, 0, 0.2)"
+								: "rgba(0, 0, 0, 0.05)",
 							zIndex: 1,
 						},
 					}}>
@@ -64,7 +74,9 @@ const Certificate = ({ ImgSertif }) => {
 							height: "auto",
 							display: "block",
 							objectFit: "cover",
-							filter: "contrast(1.10) brightness(0.9) saturate(1.1)",
+							filter: isDarkMode
+								? "contrast(1.10) brightness(0.9) saturate(1.1)"
+								: "contrast(1.05) brightness(0.95) saturate(1.05)",
 							transition: "filter 0.3s ease",
 						}}
 						onClick={handleOpen}
@@ -80,6 +92,9 @@ const Certificate = ({ ImgSertif }) => {
 						left: 0,
 						right: 0,
 						bottom: 0,
+						backgroundColor: isDarkMode
+							? "rgba(30, 30, 60, 0.4)"
+							: "rgba(90, 90, 150, 0.25)",
 						opacity: 0,
 						transition: "all 0.3s ease",
 						cursor: "pointer",
@@ -125,14 +140,6 @@ const Certificate = ({ ImgSertif }) => {
 				onClose={handleClose}
 				aria-labelledby="modal-modal-title"
 				aria-describedby="modal-modal-description"
-				BackdropComponent={Backdrop}
-				BackdropProps={{
-					timeout: 300,
-					sx: {
-						backgroundColor: "rgba(0, 0, 0, 0.9)",
-						backdropFilter: "blur(5px)",
-					},
-				}}
 				sx={{
 					display: "flex",
 					alignItems: "center",
@@ -140,7 +147,10 @@ const Certificate = ({ ImgSertif }) => {
 					margin: 0,
 					padding: 0,
 					"& .MuiBackdrop-root": {
-						backgroundColor: "rgba(0, 0, 0, 0.9)",
+						backgroundColor: isDarkMode
+							? "rgba(0, 0, 0, 0.9)"
+							: "rgba(0, 0, 0, 0.8)",
+						backdropFilter: "blur(5px)",
 					},
 				}}>
 				<Box
@@ -164,11 +174,15 @@ const Certificate = ({ ImgSertif }) => {
 							right: 16,
 							top: 16,
 							color: "white",
-							bgcolor: "rgba(0,0,0,0.6)",
+							bgcolor: isDarkMode
+								? "rgba(0,0,0,0.6)"
+								: "rgba(30,30,30,0.6)",
 							zIndex: 1,
 							padding: 1,
 							"&:hover": {
-								bgcolor: "rgba(0,0,0,0.8)",
+								bgcolor: isDarkMode
+									? "rgba(0,0,0,0.8)"
+									: "rgba(30,30,30,0.8)",
 								transform: "scale(1.1)",
 							},
 						}}
@@ -186,6 +200,9 @@ const Certificate = ({ ImgSertif }) => {
 							maxHeight: "90vh",
 							margin: "0 auto",
 							objectFit: "contain",
+							boxShadow: isDarkMode
+								? "0 10px 30px rgba(0,0,0,0.3)"
+								: "0 10px 30px rgba(0,0,0,0.2)",
 						}}
 					/>
 				</Box>

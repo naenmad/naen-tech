@@ -1,6 +1,101 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Terminal } from 'lucide-react';
 
+// Add this ASCII art constant at the top of your file
+const MADNAEN_ASCII = `
+███╗   ███╗ █████╗ ██████╗ ███╗   ██╗ █████╗ ███████╗███╗   ██╗
+████╗ ████║██╔══██╗██╔══██╗████╗  ██║██╔══██╗██╔════╝████╗  ██║
+██╔████╔██║███████║██║  ██║██╔██╗ ██║███████║█████╗  ██╔██╗ ██║
+██║╚██╔╝██║██╔══██║██║  ██║██║╚██╗██║██╔══██║██╔══╝  ██║╚██╗██║
+██║ ╚═╝ ██║██║  ██║██████╔╝██║ ╚████║██║  ██║███████╗██║ ╚████║
+╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝                                       
+`;
+
+const MatrixEffect = ({ onExit }) => {
+  const canvasRef = useRef(null);
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Matrix characters
+    const chars = "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const charArray = chars.split('');
+    
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    
+    // An array of drops - one per column
+    const drops = [];
+    
+    // Initialize drops
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * -100;
+    }
+    
+    // Draw function
+    const draw = () => {
+      // Black with opacity for trail effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#0f0';
+      ctx.font = `${fontSize}px monospace`;
+      
+      // Loop over drops
+      for (let i = 0; i < drops.length; i++) {
+        // Generate random character
+        const text = charArray[Math.floor(Math.random() * charArray.length)];
+        
+        // x = i * fontSize, y = drops[i] * fontSize
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        
+        // Randomize drop restart locations
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        
+        // Move drops down
+        drops[i]++;
+      }
+    };
+    
+    const interval = setInterval(draw, 33);
+    
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Press any key to exit
+    const handleKeyDown = () => {
+      onExit();
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onExit]);
+  
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center">
+      <canvas ref={canvasRef} className="absolute inset-0" />
+      <div className="absolute bottom-5 text-white text-opacity-70 text-center text-sm bg-black bg-opacity-50 px-4 py-2 rounded-full">
+        Press any key to exit
+      </div>
+    </div>
+  );
+};
+
 const TerminalConsole = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -9,6 +104,7 @@ const TerminalConsole = () => {
     { type: 'system', content: 'Welcome to Ahmad Zulkarnaen\'s terminal 👋' },
     { type: 'system', content: 'Type "help" to see available commands.' },
   ]);
+  const [isMatrixActive, setIsMatrixActive] = useState(false);
   const inputRef = useRef(null);
   const terminalRef = useRef(null);
   
@@ -78,7 +174,8 @@ const TerminalConsole = () => {
           .filter(cmd => !commands[cmd].hidden) // Filter out hidden commands
           .map(cmd => (
             { type: 'system', content: `• ${cmd} - ${commands[cmd].description}` }
-          ))
+          )),
+        { type: 'system', content: '• Fun commands: matrix, madnaen' }
       ]
     },
     about: {
@@ -138,8 +235,8 @@ const TerminalConsole = () => {
         }
         
         const sectionMap = {
-          'projects': 'Portofolio',
-          'portfolio': 'Portofolio'
+          'projects': 'Portfolio',
+          'portfolio': 'Portfolio'
         };
         
         const targetId = sectionMap[section] || section.charAt(0).toUpperCase() + section.slice(1);
@@ -286,6 +383,22 @@ const TerminalConsole = () => {
         { type: 'system', content: 'Try combining words like "naen", "secret", "zul", or "easteregg"' },
         { type: 'system', content: '🤫 But keep it a secret!' }
       ]
+    },
+    matrix: {
+      description: 'Activate Matrix effect',
+      action: () => {
+        setTimeout(() => {
+          setIsMatrixActive(true);
+        }, 100);
+        
+        return [{ type: 'system', content: 'Initializing Matrix effect...' }];
+      }
+    },
+    madnaen: {
+      description: 'Display ASCII art',
+      action: () => {
+        return [{ type: 'ascii', content: MADNAEN_ASCII }];
+      }
     }
   };
 
@@ -311,6 +424,26 @@ const TerminalConsole = () => {
     setInput('');
   };
 
+  // Add tab completion
+  const handleKeyDown = (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const partialCommand = input.trim().toLowerCase();
+      const matchingCommands = Object.keys(commands).filter(cmd => 
+        cmd.startsWith(partialCommand)
+      );
+      
+      if (matchingCommands.length === 1) {
+        setInput(matchingCommands[0]);
+      } else if (matchingCommands.length > 1) {
+        setOutput([
+          ...output,
+          { type: 'system', content: `Matching commands: ${matchingCommands.join(', ')}` }
+        ]);
+      }
+    }
+  };
+
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
@@ -323,8 +456,25 @@ const TerminalConsole = () => {
     }
   }, [output]);
 
+  useEffect(() => {
+    const hasMatrixOutput = output.some(item => item.type === 'matrix');
+    if (hasMatrixOutput && !isMatrixActive) {
+      setIsMatrixActive(true);
+    }
+  }, [output, isMatrixActive]);
+
+  const handleExitMatrix = () => {
+    setIsMatrixActive(false);
+    setOutput(prev => [
+      ...prev.filter(item => item.type !== 'matrix'),
+      { type: 'system', content: 'Matrix simulation terminated. Welcome back to reality!' }
+    ]);
+  };
+
   return (
     <>
+      {isMatrixActive && <MatrixEffect onExit={handleExitMatrix} />}
+      
       {/* Terminal toggle button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -368,12 +518,17 @@ const TerminalConsole = () => {
               <div key={index} className={`mb-1 ${
                 line.type === 'error' ? currentStyles.errorText : 
                 line.type === 'command' ? currentStyles.commandText : 
+                line.type === 'ascii' ? "" : // No color class for ASCII
                 currentStyles.systemText
               }`}>
                 {line.type === 'link' ? (
                   <a href={line.href} className={`${currentStyles.linkText} hover:underline`}>
                     {line.content}
                   </a>
+                ) : line.type === 'ascii' ? (
+                  <pre className={`${currentStyles.commandText} text-xs sm:text-sm whitespace-pre font-mono`}>
+                    {line.content}
+                  </pre>
                 ) : (
                   line.content
                 )}
@@ -387,6 +542,7 @@ const TerminalConsole = () => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className={`flex-1 bg-transparent border-none outline-none ${currentStyles.text} caret-green-400`}
                 autoComplete="off"
                 spellCheck="false"

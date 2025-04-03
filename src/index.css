@@ -3,6 +3,28 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Light mode variables */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f9fc;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #e2e8f0;
+  --accent-gradient-from: #6366f1;
+  --accent-gradient-to: #a855f7;
+}
+
+.dark {
+  /* Dark mode variables */
+  --bg-primary: #030014;
+  --bg-secondary: #080320;
+  --text-primary: #ffffff;
+  --text-secondary: #e2d3fd;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --accent-gradient-from: #6366f1;
+  --accent-gradient-to: #a855f7;
+}
+
 * {
 	margin: 0;
 	padding: 0;

@@ -15,11 +15,15 @@ import Footer from "./components/Footer";
 import Portfolio from "./Pages/Portfolio";
 import Posts from './Pages/Posts';
 import ContactPage from "./Pages/Contact";
-import ProjectDetails from "./components/ProjectDetail";
+import ProjectDetails from "./components/ProjectDetails";
+import PostDetails from "./components/PostDetails"; // You'll need to create this
 import TerminalConsole from './components/TerminalConsole';
 import WelcomeScreen from "./Pages/WelcomeScreen";
 import { AnimatePresence } from 'framer-motion';
 import { Terminal } from 'lucide-react';
+import Skills from './Pages/Skills';
+import Experience from './Pages/Experience';
+import Education from './Pages/Education';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -36,6 +40,9 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           <AnimatedBackground />
           <Home />
           <About />
+          <Skills />
+          <Experience />
+          <Education />
           <Posts />
           <Portfolio />
           <ContactPage />
@@ -49,8 +56,19 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
 
 const ProjectPageLayout = () => (
   <>
+    <Navbar />
     <ProjectDetails />
     <Footer />
+  </>
+);
+
+const PostsPageLayout = () => (
+  <>
+    <Navbar />
+    <AnimatedBackground />
+    <PostDetails />
+    <Footer />
+    <TerminalConsole />
   </>
 );
 
@@ -65,6 +83,10 @@ function App() {
     {
       path: "/project/:id",
       element: <ProjectPageLayout />
+    },
+    {
+      path: "/post/:id",
+      element: <PostsPageLayout />
     },
     {
       path: "*",

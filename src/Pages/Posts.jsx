@@ -1,7 +1,9 @@
-import React, { useEffect, memo, useState, useMemo } from "react"
-import { BookOpen, Calendar, Clock, Search, Tag, Sparkles, ArrowRight } from "lucide-react"
-import AOS from 'aos'
-import 'aos/dist/aos.css'
+import React, { useEffect, memo, useState, useMemo } from "react";
+import { BookOpen, Calendar, Clock, Search, Tag, Sparkles, ArrowRight } from "lucide-react";
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import { db } from '../firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
 // Memoized Components
 const Header = memo(() => (
@@ -138,80 +140,54 @@ const SearchAndFilter = memo(({ searchQuery, setSearchQuery, activeCategory, set
 const PostsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  // Sample posts data - you would typically fetch this from an API or CMS
-  const postsData = useMemo(() => [
-    {
-      id: 1,
-      title: "Building Modern Web Applications with React and TailwindCSS",
-      category: "Web Development",
-      date: "Mar 25, 2025",
-      readTime: 5,
-      image: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      excerpt: "Learn how to leverage React and TailwindCSS to build modern, responsive web applications with a focus on performance and developer experience."
-    },
-    {
-      id: 2,
-      title: "Getting Started with Mobile App Development Using React Native",
-      category: "Mobile Development",
-      date: "Mar 18, 2025",
-      readTime: 7,
-      image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      excerpt: "Discover how to build cross-platform mobile applications using React Native, allowing you to write once and deploy to both iOS and Android."
-    },
-    {
-      id: 3,
-      title: "Introduction to Machine Learning for Software Engineers",
-      category: "AI & ML",
-      date: "Mar 10, 2025",
-      readTime: 10,
-      image: "https://images.unsplash.com/photo-1593720213428-28a5b9e94613?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      excerpt: "A beginner-friendly guide to understanding machine learning concepts and how they can be applied to solve real-world problems in software engineering."
-    },
-    {
-      id: 4,
-      title: "The Complete Guide to RESTful API Design",
-      category: "Backend",
-      date: "Mar 5, 2025",
-      readTime: 8,
-      image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      excerpt: "Learn best practices for designing robust, scalable, and maintainable RESTful APIs that developers will love to use."
-    },
-    {
-      id: 5,
-      title: "Improving Website Performance: Tips and Tricks",
-      category: "Web Development",
-      date: "Feb 28, 2025",
-      readTime: 6,
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      excerpt: "Explore techniques to optimize your website's performance, including image optimization, code splitting, and lazy loading."
-    },
-    {
-      id: 6,
-      title: "Understanding TypeScript: A Practical Guide",
-      category: "Programming",
-      date: "Feb 20, 2025",
-      readTime: 9,
-      image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
-      excerpt: "Dive into TypeScript and discover how it can improve your JavaScript development experience with static typing and enhanced tooling."
-    }
-  ], []);
+  // Fetch posts from Firebase
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const postsQuery = query(collection(db, 'posts'), orderBy('date', 'desc'));
+        const querySnapshot = await getDocs(postsQuery);
+        
+        const fetchedPosts = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          // Convert Firestore timestamp to string format if needed
+          date: doc.data().date.toDate().toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          })
+        }));
+        
+        setPosts(fetchedPosts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPosts();
+  }, []);
   
-  // Extract unique categories
+  // Extract unique categories from fetched posts
   const categories = useMemo(() => 
-    [...new Set(postsData.map(post => post.category))], 
-    [postsData]
+    [...new Set(posts.map(post => post.category))], 
+    [posts]
   );
   
   // Filter posts based on search query and active category
   const filteredPosts = useMemo(() => {
-    return postsData.filter(post => {
+    return posts.filter(post => {
       const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeCategory === 'all' || post.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [postsData, searchQuery, activeCategory]);
+  }, [posts, searchQuery, activeCategory]);
 
   // AOS initialization
   useEffect(() => {
@@ -252,7 +228,11 @@ const PostsPage = () => {
           categories={categories}
         />
 
-        {filteredPosts.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        ) : filteredPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map((post, index) => (
               <PostCard key={post.id} post={post} index={index} />

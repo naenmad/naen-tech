@@ -30,7 +30,7 @@ const ContactPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // This prevents the default form submission
     setIsSubmitting(true);
 
     Swal.fire({
@@ -44,28 +44,36 @@ const ContactPage = () => {
 
     try {
       // Get form data
-      const form = e.target;
-      const formData = new FormData(form);
-
-      // Submit form
-      await form.submit();
-
-      // Show success message
-      Swal.fire({
-        title: 'Success!',
-        text: 'Your message has been sent successfully!',
-        icon: 'success',
-        confirmButtonColor: '#6366f1',
-        timer: 2000,
-        timerProgressBar: true
+      const formValues = new FormData(e.target);
+      
+      // Send form data to FormSubmit using fetch
+      const response = await fetch('https://formsubmit.co/ajax/ahmzlkrnn@gmail.com', {
+        method: 'POST',
+        body: formValues,
       });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Show success message
+        Swal.fire({
+          title: 'Success!',
+          text: 'Your message has been sent successfully!',
+          icon: 'success',
+          confirmButtonColor: '#6366f1',
+          timer: 2000,
+          timerProgressBar: true
+        });
 
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        message: "",
-      });
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          message: "",
+        });
+      } else {
+        throw new Error('Form submission failed');
+      }
     } catch (error) {
       Swal.fire({
         title: 'Error!',
@@ -131,8 +139,6 @@ const ContactPage = () => {
             </div>
 
             <form 
-              action="https://formsubmit.co/ekizulfarrachman@gmail.com"
-              method="POST"
               onSubmit={handleSubmit}
               className="space-y-6"
             >

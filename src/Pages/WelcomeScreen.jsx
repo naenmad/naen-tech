@@ -221,7 +221,7 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
                 data-aos-delay="1100"
               >
                 <p className="text-white/70 max-w-xl mx-auto">
-                  Softwarer Engineer crafting elegant digital solutions with modern technologies
+                    A Software Engineer aiming to craft elegant digital solutions with modern technologies.
                 </p>
               </motion.div>
 
