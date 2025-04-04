@@ -1,5 +1,4 @@
 import { 
-  BrowserRouter,
   createBrowserRouter,
   RouterProvider 
 } from 'react-router-dom';
@@ -16,25 +15,26 @@ import Portfolio from "./Pages/Portfolio";
 import Posts from './Pages/Posts';
 import ContactPage from "./Pages/Contact";
 import ProjectDetails from "./components/ProjectDetails";
-import PostDetails from "./components/PostDetails"; // You'll need to create this
+import PostDetails from "./components/PostDetails";
 import TerminalConsole from './components/TerminalConsole';
 import WelcomeScreen from "./Pages/WelcomeScreen";
 import { AnimatePresence } from 'framer-motion';
-import { Terminal } from 'lucide-react';
 import Skills from './Pages/Skills';
 import Experience from './Pages/Experience';
 import Education from './Pages/Education';
 
-const LandingPage = ({ showWelcome, setShowWelcome }) => {
-  return (
-    <>
-      <AnimatePresence mode="wait">
-        {showWelcome && (
-          <WelcomeScreen onLoadingComplete={() => setShowWelcome(false)} />
-        )}
-      </AnimatePresence>
+// Define props type for LandingPage
+interface LandingPageProps {
+  showWelcome: boolean;
+  setShowWelcome: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-      {!showWelcome && (
+const LandingPage: React.FC<LandingPageProps> = ({ showWelcome, setShowWelcome }) => {
+  return (
+    <AnimatePresence mode="wait">
+      {showWelcome ? (
+        <WelcomeScreen setShowWelcome={setShowWelcome} />
+      ) : (
         <>
           <Navbar />
           <AnimatedBackground />
@@ -50,11 +50,11 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           <TerminalConsole />
         </>
       )}
-    </>
+    </AnimatePresence>
   );
 };
 
-const ProjectPageLayout = () => (
+const ProjectPageLayout: React.FC = () => (
   <>
     <Navbar />
     <ProjectDetails />
@@ -62,7 +62,7 @@ const ProjectPageLayout = () => (
   </>
 );
 
-const PostsPageLayout = () => (
+const PostsPageLayout: React.FC = () => (
   <>
     <Navbar />
     <AnimatedBackground />
@@ -73,7 +73,7 @@ const PostsPageLayout = () => (
 );
 
 function App() {
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState<boolean>(true);
   
   const routes = [
     {
@@ -108,7 +108,6 @@ function App() {
 
   const router = createBrowserRouter(routes, {
     future: {
-      v7_startTransition: true,
       v7_relativeSplatPath: true,
       v7_fetcherPersist: true,
       v7_normalizeFormMethod: true,
@@ -117,19 +116,7 @@ function App() {
     }
   });
 
-  return (
-    <RouterProvider 
-      router={router} 
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-        v7_fetcherPersist: true,
-        v7_normalizeFormMethod: true,
-        v7_partialHydration: true,
-        v7_skipActionErrorRevalidation: true
-      }}
-    />
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

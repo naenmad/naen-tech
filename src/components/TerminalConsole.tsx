@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Terminal } from 'lucide-react';
 
-// Add this ASCII art constant at the top of your file
+// ASCII Art constant
 const MADNAEN_ASCII = `
 ███╗   ███╗ █████╗ ██████╗ ███╗   ██╗ █████╗ ███████╗███╗   ██╗
 ████╗ ████║██╔══██╗██╔══██╗████╗  ██║██╔══██╗██╔════╝████╗  ██║
@@ -11,12 +11,48 @@ const MADNAEN_ASCII = `
 ╚═╝     ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝                                       
 `;
 
-const MatrixEffect = ({ onExit }) => {
-  const canvasRef = useRef(null);
+// Define TypeScript interfaces
+interface OutputItem {
+  type: 'system' | 'command' | 'error' | 'link' | 'ascii' | 'matrix';
+  content: string;
+  href?: string;
+}
+
+interface ThemeStyle {
+  background: string;
+  text: string;
+  commandText: string;
+  systemText: string;
+  errorText: string;
+  linkText: string;
+  headerBg: string;
+  border: string;
+}
+
+interface Command {
+  description: string;
+  hidden?: boolean;
+  action: (args: string[]) => OutputItem[];
+}
+
+interface CommandsMap {
+  [key: string]: Command;
+}
+
+interface MatrixEffectProps {
+  onExit: () => void;
+}
+
+// MatrixEffect component with proper TypeScript definitions
+const MatrixEffect: React.FC<MatrixEffectProps> = ({ onExit }) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -29,12 +65,7 @@ const MatrixEffect = ({ onExit }) => {
     const columns = canvas.width / fontSize;
     
     // An array of drops - one per column
-    const drops = [];
-    
-    // Initialize drops
-    for (let i = 0; i < columns; i++) {
-      drops[i] = Math.random() * -100;
-    }
+    const drops: number[] = Array(Math.floor(columns)).fill(0).map(() => Math.random() * -100);
     
     // Draw function
     const draw = () => {
@@ -96,20 +127,21 @@ const MatrixEffect = ({ onExit }) => {
   );
 };
 
-const TerminalConsole = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const [currentTheme, setCurrentTheme] = useState('default');
-  const [output, setOutput] = useState([
+// Main Terminal component
+const TerminalConsole: React.FC = () => {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [input, setInput] = useState<string>('');
+  const [currentTheme, setCurrentTheme] = useState<string>('default');
+  const [output, setOutput] = useState<OutputItem[]>([
     { type: 'system', content: 'Welcome to Ahmad Zulkarnaen\'s terminal 👋' },
     { type: 'system', content: 'Type "help" to see available commands.' },
   ]);
-  const [isMatrixActive, setIsMatrixActive] = useState(false);
-  const inputRef = useRef(null);
-  const terminalRef = useRef(null);
+  const [isMatrixActive, setIsMatrixActive] = useState<boolean>(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const terminalRef = useRef<HTMLDivElement | null>(null);
   
   // Theme definitions
-  const themeStyles = {
+  const themeStyles: Record<string, ThemeStyle> = {
     default: {
       background: 'bg-black/95',
       text: 'text-white',
@@ -163,20 +195,26 @@ const TerminalConsole = () => {
   };
   
   // Get current theme styles
-  const currentStyles = themeStyles[currentTheme];
+  const currentStyles = themeStyles[currentTheme] || themeStyles.default;
 
-  const commands = {
+  // Command definitions
+  const commands: CommandsMap = {
     help: {
       description: 'Show available commands',
-      action: () => [
-        { type: 'system', content: 'Available commands:' },
-        ...Object.keys(commands)
-          .filter(cmd => !commands[cmd].hidden) // Filter out hidden commands
-          .map(cmd => (
-            { type: 'system', content: `• ${cmd} - ${commands[cmd].description}` }
+      action: (args: string[]): OutputItem[] => {
+        // Get all visible commands first
+        const visibleCommands = Object.keys(commands)
+          .filter(cmd => !commands[cmd].hidden);
+        
+        // Return properly formatted output items
+        return [
+          { type: 'system' as const, content: 'Available commands:' },
+          ...visibleCommands.map(cmd => (
+            { type: 'system' as const, content: `• ${cmd} - ${commands[cmd].description}` }
           )),
-        { type: 'system', content: '• Fun commands: matrix, madnaen' }
-      ]
+          { type: 'system' as const, content: '• Fun commands: matrix, madnaen' }
+        ];
+      }
     },
     about: {
       description: 'Show information about me',
@@ -234,7 +272,7 @@ const TerminalConsole = () => {
           return [{ type: 'error', content: `Invalid section. Valid options: ${validSections.join(', ')}` }];
         }
         
-        const sectionMap = {
+        const sectionMap: Record<string, string> = {
           'projects': 'Portfolio',
           'portfolio': 'Portfolio'
         };
@@ -242,7 +280,10 @@ const TerminalConsole = () => {
         const targetId = sectionMap[section] || section.charAt(0).toUpperCase() + section.slice(1);
         
         setTimeout(() => {
-          document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+          const element = document.getElementById(targetId);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
         }, 500);
         
         return [{ type: 'system', content: `Navigating to ${section}...` }];
@@ -282,36 +323,35 @@ const TerminalConsole = () => {
       ]
     },
     tools: {
-        description: 'Show development tools I use',
-        action: () => [
-          { type: 'system', content: 'Development Tools:' },
-          { type: 'system', content: '• Code Editor: VS Code and Intellij Idea' },
-          { type: 'system', content: '• Design: Figma' },
-          { type: 'system', content: '• Version Control: Git, GitHub' },
-          { type: 'system', content: '• DevOps: Docker, GitHub Actions' }
-        ]
-      },
-      stack: {
-        description: 'Show my preferred tech stack',
-        action: () => [
-          { type: 'system', content: 'My Preferred Tech Stack:' },
-          { type: 'system', content: '• Frontend: React.js, Next.js, TailwindCSS' },
-          { type: 'system', content: '• Backend: Node.js, Express, GraphQL' },
-          { type: 'system', content: '• Database: MongoDB, PostgreSQL' },
-          { type: 'system', content: '• Deployment: Vercel, AWS' }
-        ]
-      },
-        theme: {
+      description: 'Show development tools I use',
+      action: () => [
+        { type: 'system', content: 'Development Tools:' },
+        { type: 'system', content: '• Code Editor: VS Code and Intellij Idea' },
+        { type: 'system', content: '• Design: Figma' },
+        { type: 'system', content: '• Version Control: Git, GitHub' },
+        { type: 'system', content: '• DevOps: Docker, GitHub Actions' }
+      ]
+    },
+    stack: {
+      description: 'Show my preferred tech stack',
+      action: () => [
+        { type: 'system', content: 'My Preferred Tech Stack:' },
+        { type: 'system', content: '• Frontend: React.js, Next.js, TailwindCSS' },
+        { type: 'system', content: '• Backend: Node.js, Express, GraphQL' },
+        { type: 'system', content: '• Database: MongoDB, PostgreSQL' },
+        { type: 'system', content: '• Deployment: Vercel, AWS' }
+      ]
+    },
+    theme: {
       description: 'Change terminal color theme',
       action: (args) => {
         const theme = args[0]?.toLowerCase();
-        const validThemes = ['default', 'dark', 'light', 'retro', 'hacker'];
+        const validThemes = Object.keys(themeStyles);
         
         if (!theme || !validThemes.includes(theme)) {
           return [{ type: 'error', content: `Invalid theme. Options: ${validThemes.join(', ')}` }];
         }
         
-        // Implement theme change logic
         setCurrentTheme(theme);
         
         return [{ type: 'system', content: `Theme changed to ${theme}!` }];
@@ -329,7 +369,7 @@ const TerminalConsole = () => {
     },
     secretzul: {
       description: 'Access secret area',
-      hidden: true, // This makes it not appear in help
+      hidden: true,
       action: () => {
         const easterEggUrls = ['/zulganteng', '/zultampan'];
         const randomUrl = easterEggUrls[Math.floor(Math.random() * easterEggUrls.length)];
@@ -345,7 +385,6 @@ const TerminalConsole = () => {
         ];
       }
     },
-    
     naenganteng: {
       description: 'Another hidden gem',
       hidden: true,
@@ -360,7 +399,6 @@ const TerminalConsole = () => {
         ];
       }
     },
-    
     easteregg: {
       description: 'Find the Easter egg',
       hidden: true,
@@ -375,7 +413,6 @@ const TerminalConsole = () => {
         ];
       }
     },
-    
     secret: {
       description: 'What secrets?',
       action: () => [
@@ -391,7 +428,7 @@ const TerminalConsole = () => {
           setIsMatrixActive(true);
         }, 100);
         
-        return [{ type: 'system', content: 'Initializing Matrix effect...' }];
+        return [{ type: 'matrix', content: 'Initializing Matrix effect...' }];
       }
     },
     madnaen: {
@@ -402,12 +439,12 @@ const TerminalConsole = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!input.trim()) return;
     
-    const newOutput = [...output, { type: 'command', content: `> ${input}` }];
+    const newOutput: OutputItem[] = [...output, { type: 'command', content: `> ${input}` }];
     
     const [command, ...args] = input.trim().toLowerCase().split(' ');
     
@@ -425,10 +462,13 @@ const TerminalConsole = () => {
   };
 
   // Add tab completion
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Tab') {
       e.preventDefault();
       const partialCommand = input.trim().toLowerCase();
+      
+      if (!partialCommand) return;
+      
       const matchingCommands = Object.keys(commands).filter(cmd => 
         cmd.startsWith(partialCommand)
       );
@@ -512,7 +552,7 @@ const TerminalConsole = () => {
           {/* Terminal content */}
           <div 
             ref={terminalRef}
-            className={`p-4 font-mono text-sm overflow-y-auto h-[calc(60vh-40px)] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent`}
+            className="p-4 font-mono text-sm overflow-y-auto h-[calc(60vh-40px)] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
           >
             {output.map((line, index) => (
               <div key={index} className={`mb-1 ${

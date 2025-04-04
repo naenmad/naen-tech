@@ -5,45 +5,30 @@ import { GraduationCap, Calendar, MapPin, BookOpen } from 'lucide-react';
 const Education = () => {
   const educations = [
     {
+      degree: "Science",
+      institution: "SMA Negeri 10 Bogor",
+      location: "Bogor, Indonesia",
+      period: "2020 - 2023",
+      description: "Learning about Science. Graduated with honors.",
+      highlights: [
+        "GPA: 91/100",
+      ]
+    },
+    {
       degree: "Bachelor of Computer Science",
-      institution: "University of Indonesia",
-      location: "Jakarta, Indonesia",
-      period: "2014 - 2018",
-      description: "Focused on software engineering and web development. Graduated with honors.",
+      institution: "University of Singaperbangsa Karawang",
+      location: "Karawang, Indonesia",
+      period: "2023 - Now",
+      description: "Focused on software engineering and web development.",
       highlights: [
         "GPA: 3.8/4.0",
-        "Final project: Developing a real-time collaborative code editor",
         "Active member of campus programming club"
       ]
     },
-    {
-      degree: "Full Stack Web Development",
-      institution: "Dicoding Academy",
-      location: "Online",
-      period: "2019",
-      description: "Intensive bootcamp focused on modern full-stack web development technologies.",
-      highlights: [
-        "MERN Stack Development",
-        "Top performer in the program",
-        "Built an e-commerce platform as capstone project"
-      ]
-    },
-    {
-      degree: "React Native Specialization",
-      institution: "Coursera",
-      location: "Online",
-      period: "2020",
-      description: "Comprehensive course covering mobile app development with React Native.",
-      highlights: [
-        "Developed cross-platform mobile applications",
-        "Advanced state management techniques",
-        "UI/UX design principles for mobile"
-      ]
-    }
   ];
 
   return (
-    <section id="Education" className="relative py-20 bg-[#030014] overflow-hidden">
+    <section id="Education" className="relative py-20 overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-0 w-1/2 h-1/2 bg-indigo-900/10 rounded-full blur-[120px] -translate-y-1/2"></div>

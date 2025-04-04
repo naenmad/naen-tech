@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from "react";
 import { 
   Menu, 
   X, 
@@ -12,16 +12,31 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
-    const [activeSection, setActiveSection] = useState("Home");
-    const [showSearchBox, setShowSearchBox] = useState(false);
-    const [searchResults, setSearchResults] = useState([]);
-    const [searching, setSearching] = useState(false);
-    const searchInputRef = useRef(null);
+// Define TypeScript interfaces
+interface NavItem {
+  href: string;
+  label: string;
+  hasDropdown?: boolean;
+  dropdownItems?: { href: string; label: string }[];
+}
+
+interface SearchableItem {
+  section: string;
+  content: string;
+  href: string;
+}
+
+const Navbar: React.FC = () => {
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [scrolled, setScrolled] = useState<boolean>(false);
+    const [activeSection, setActiveSection] = useState<string>("Home");
+    const [showSearchBox, setShowSearchBox] = useState<boolean>(false);
+    const [searchResults, setSearchResults] = useState<SearchableItem[]>([]);
+    const [searching, setSearching] = useState<boolean>(false);
+    const [scrollProgress, setScrollProgress] = useState<number>(0);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
     
-    const navItems = [
+    const navItems: NavItem[] = [
         { href: "#Home", label: "Home" },
         { 
             href: "#About", 
@@ -38,7 +53,7 @@ const Navbar = () => {
         { href: "#Contact", label: "Contact" },
     ];
 
-    const searchableContent = [
+    const searchableContent: SearchableItem[] = [
         { 
             section: "Home", 
             content: "Ahmad Zulkarnaen Software Engineer Portfolio Website",
@@ -84,22 +99,32 @@ const Navbar = () => {
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
-            const sections = navItems.map(item => {
-                const section = document.querySelector(item.href);
-                if (section) {
-                    return {
-                        id: item.href.replace("#", ""),
-                        offset: section.offsetTop - 550,
-                        height: section.offsetHeight
-                    };
-                }
-                return null;
-            }).filter(Boolean);
+            
+            // Update scroll progress
+            const scrollHeight = document.body.scrollHeight - window.innerHeight;
+            if (scrollHeight > 0) {
+                setScrollProgress((window.scrollY / scrollHeight) * 100);
+            }
+            
+            // Find active section
+            const sections = navItems
+                .map(item => {
+                    const section = document.querySelector(item.href);
+                    if (section) {
+                        return {
+                            id: item.href.replace("#", ""),
+                            offset: section.getBoundingClientRect().top + window.scrollY - 550,
+                            height: section.getBoundingClientRect().height
+                        };
+                    }
+                    return null;
+                })
+                .filter(Boolean);
 
             const currentPosition = window.scrollY;
             const active = sections.find(section => 
-                currentPosition >= section.offset && 
-                currentPosition < section.offset + section.height
+                currentPosition >= section!.offset && 
+                currentPosition < section!.offset + section!.height
             );
 
             if (active) {
@@ -109,15 +134,12 @@ const Navbar = () => {
 
         window.addEventListener("scroll", handleScroll);
         handleScroll();
+        
         return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+    }, [navItems]);
 
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
+        document.body.style.overflow = isOpen ? 'hidden' : 'unset';
     }, [isOpen]);
 
     useEffect(() => {
@@ -132,11 +154,11 @@ const Navbar = () => {
         document.documentElement.classList.remove('light');
     }, []);
 
-    const scrollToSection = (e, href) => {
+    const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string): void => {
         e.preventDefault();
         const section = document.querySelector(href);
         if (section) {
-            const top = section.offsetTop - 100;
+            const top = section.getBoundingClientRect().top + window.scrollY - 100;
             window.scrollTo({
                 top: top,
                 behavior: "smooth"
@@ -145,9 +167,8 @@ const Navbar = () => {
         setIsOpen(false);
     };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        const searchTerm = searchInputRef.current.value.trim().toLowerCase();
+    const handleSearchInput = (e: ChangeEvent<HTMLInputElement>): void => {
+        const searchTerm = e.target.value.trim().toLowerCase();
         
         if (!searchTerm) {
             setSearchResults([]);
@@ -168,14 +189,39 @@ const Navbar = () => {
         }, 300);
     };
     
-    const navigateToSearchResult = (href) => {
+    const handleSearch = (e: FormEvent<HTMLFormElement>): void => {
+        e.preventDefault();
+        if (searchInputRef.current) {
+            const searchTerm = searchInputRef.current.value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                setSearchResults([]);
+                return;
+            }
+            
+            setSearching(true);
+            
+            // Simulate search delay for better UX
+            setTimeout(() => {
+                const results = searchableContent.filter(item => 
+                    item.section.toLowerCase().includes(searchTerm) || 
+                    item.content.toLowerCase().includes(searchTerm)
+                );
+                
+                setSearchResults(results);
+                setSearching(false);
+            }, 300);
+        }
+    };
+    
+    const navigateToSearchResult = (href: string): void => {
         setShowSearchBox(false);
         setSearchResults([]);
         if (searchInputRef.current) searchInputRef.current.value = '';
         
         const section = document.querySelector(href);
         if (section) {
-            const top = section.offsetTop - 100;
+            const top = section.getBoundingClientRect().top + window.scrollY - 100;
             window.scrollTo({
                 top: top,
                 behavior: "smooth"
@@ -263,7 +309,7 @@ const Navbar = () => {
                                 {item.hasDropdown && (
                                     <div className="absolute left-0 mt-2 w-48 origin-top-left rounded-md overflow-hidden transition-all duration-300 transform opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto">
                                         <div className="bg-[#030014]/90 backdrop-blur-xl border border-white/10 shadow-lg rounded-md py-1 ring-1 ring-black ring-opacity-5 divide-y divide-gray-800/50">
-                                            {item.dropdownItems.map((dropdownItem) => (
+                                            {item.dropdownItems?.map((dropdownItem) => (
                                                 <a
                                                     key={dropdownItem.label}
                                                     href={dropdownItem.href}
@@ -336,16 +382,16 @@ const Navbar = () => {
                         transition={{ duration: 0.2 }}
                         className="absolute top-16 left-0 w-full bg-[#030014]/90 border-t border-b border-white/10 backdrop-blur-xl p-4"
                     >
-                        <form onChange={handleSearch} onSubmit={(e) => e.preventDefault()} className="max-w-3xl mx-auto flex gap-2">
+                        <form onSubmit={handleSearch} className="max-w-3xl mx-auto flex gap-2">
                             <input
                                 ref={searchInputRef}
                                 type="text"
                                 placeholder="Search..."
+                                onChange={handleSearchInput}
                                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 placeholder-gray-400"
                             />
                             <button 
-                                type="button"
-                                onClick={handleSearch}
+                                type="submit"
                                 className="bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity duration-300 flex items-center gap-2"
                             >
                                 {searching ? (
@@ -449,7 +495,7 @@ const Navbar = () => {
                                 {/* Mobile Dropdown Items */}
                                 {item.hasDropdown && (
                                     <div className="ml-6 mt-1 space-y-1 border-l-2 border-indigo-500/30 pl-4">
-                                        {item.dropdownItems.map((dropdownItem) => (
+                                        {item.dropdownItems?.map((dropdownItem) => (
                                             <a
                                                 key={dropdownItem.label}
                                                 href={dropdownItem.href}
@@ -493,9 +539,7 @@ const Navbar = () => {
             {/* Scroll Progress Indicator */}
             <motion.div 
                 className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7]"
-                style={{ 
-                    width: `${Math.min((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100, 100)}%`,
-                }}
+                style={{ width: `${Math.min(scrollProgress, 100)}%` }}
                 initial={{ width: "0%" }}
                 transition={{ duration: 0.1 }}
             />

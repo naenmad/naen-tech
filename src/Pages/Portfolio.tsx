@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { db, collection, getDocs, testFirebaseConnection } from "../firebase";
-import PropTypes from "prop-types";
 import { useTheme } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import Tabs from "@mui/material/Tabs";
@@ -15,6 +14,7 @@ import Certificate from "../components/Certificate";
 import { Code, Award, Boxes } from "lucide-react";
 
 // Import Swiper components
+import { Swiper as SwiperClass } from "swiper";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectFade, Keyboard } from 'swiper/modules';
 
@@ -22,8 +22,46 @@ import { EffectFade, Keyboard } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
+// Tambahkan import ThemeProvider
+import { ThemeProvider } from "../contexts/ThemeContext"; // Sesuaikan dengan path yang benar
+
+// Define interfaces for our data
+interface ProjectData {
+  id: string;
+  Img: string;
+  Title: string;
+  Description: string;
+  Link: string;
+  Github?: string;
+  TechStack: string[];
+  Features?: string[];
+}
+
+interface CertificateData {
+  id?: string;
+  Img: string;
+}
+
+interface TechStackData {
+  icon: string;
+  language: string;
+}
+
+// Interfaces for components
+interface ToggleButtonProps {
+  onClick: () => void;
+  isShowingMore: boolean;
+}
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  value: number;
+  index: number;
+  dir?: string;
+}
+
 // Separate ShowMore/ShowLess button component
-const ToggleButton = ({ onClick, isShowingMore }) => (
+const ToggleButton: React.FC<ToggleButtonProps> = ({ onClick, isShowingMore }) => (
   <button
     onClick={onClick}
     className="
@@ -75,7 +113,7 @@ const ToggleButton = ({ onClick, isShowingMore }) => (
   </button>
 );
 
-function TabPanel({ children, value, index, ...other }) {
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
   return (
     <div
       role="tabpanel"
@@ -93,20 +131,17 @@ function TabPanel({ children, value, index, ...other }) {
   );
 }
 
-TabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.number.isRequired,
-  value: PropTypes.number.isRequired,
-};
-
-function a11yProps(index) {
+function a11yProps(index: number): {
+  id: string;
+  "aria-controls": string;
+} {
   return {
     id: `full-width-tab-${index}`,
     "aria-controls": `full-width-tabpanel-${index}`,
   };
 }
 
-const techStacks = [
+const techStacks: TechStackData[] = [
   { icon: "html.svg", language: "HTML" },
   { icon: "css.svg", language: "CSS" },
   { icon: "javascript.svg", language: "JavaScript" },
@@ -121,22 +156,31 @@ const techStacks = [
   { icon: "SweetAlert.svg", language: "SweetAlert2" },
 ];
 
-export default function FullWidthTabs() {
+// Wrapper Component
+const CertificateWithTheme: React.FC<{CertificateImg: string}> = ({CertificateImg}) => {
+  return (
+    <ThemeProvider>
+      <Certificate CertificateImg={CertificateImg} />
+    </ThemeProvider>
+  );
+};
+
+const Portfolio: React.FC = () => {
   const theme = useTheme();
-  const [value, setValue] = useState(0);
-  const [projects, setProjects] = useState([]);
-  const [certificates, setCertificates] = useState([]);
-  const [showAllProjects, setShowAllProjects] = useState(false);
-  const [showAllCertificates, setShowAllCertificates] = useState(false);
+  const [value, setValue] = useState<number>(0);
+  const [projects, setProjects] = useState<ProjectData[]>([]);
+  const [certificates, setCertificates] = useState<CertificateData[]>([]);
+  const [showAllProjects, setShowAllProjects] = useState<boolean>(false);
+  const [showAllCertificates, setShowAllCertificates] = useState<boolean>(false);
   const isMobile = window.innerWidth < 768;
   const initialItems = isMobile ? 4 : 6;
   
   // Reference to Swiper instance
-  const [swiperInstance, setSwiperInstance] = useState(null);
+  const [swiperInstance, setSwiperInstance] = useState<SwiperClass | null>(null);
 
   // Add these states
-  const [isLoading, setIsLoading] = useState(true);
-  const [connectionError, setConnectionError] = useState(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initialize AOS once
@@ -168,9 +212,12 @@ export default function FullWidthTabs() {
         id: doc.id,
         ...doc.data(),
         TechStack: doc.data().TechStack || [],
-      }));
+      })) as ProjectData[];
 
-      const certificateData = certificateSnapshot.docs.map((doc) => doc.data());
+      const certificateData = certificateSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CertificateData[];
 
       console.log("First project:", projectData[0] || "No projects found");
       console.log("First certificate:", certificateData[0] || "No certificates found");
@@ -185,11 +232,11 @@ export default function FullWidthTabs() {
     } catch (error) {
       console.error("❌ Firebase connection error:", error);
       console.error("Error details:", {
-        code: error.code, 
-        message: error.message,
-        stack: error.stack
+        code: error instanceof Error ? (error as any).code : 'unknown', 
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'no stack'
       });
-      setConnectionError(error.message);
+      setConnectionError(error instanceof Error ? error.message : String(error));
       setIsLoading(false);
     }
   }, []);
@@ -204,18 +251,18 @@ export default function FullWidthTabs() {
     });
   }, [fetchData]);
 
-  const handleChange = (event, newValue) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
     if (swiperInstance) {
       swiperInstance.slideTo(newValue);
     }
   };
 
-  const handleSlideChange = (swiper) => {
+  const handleSlideChange = (swiper: SwiperClass) => {
     setValue(swiper.activeIndex);
   };
 
-  const toggleShowMore = useCallback((type) => {
+  const toggleShowMore = useCallback((type: 'projects' | 'certificates') => {
     if (type === 'projects') {
       setShowAllProjects(prev => !prev);
     } else {
@@ -362,7 +409,7 @@ export default function FullWidthTabs() {
           fadeEffect={{ crossFade: true }}
           initialSlide={value}
           onSlideChange={handleSlideChange}
-          onSwiper={setSwiperInstance}
+          onSwiper={(swiper) => setSwiperInstance(swiper)}
           keyboard={{ enabled: true }}
           allowTouchMove={false}
           className="portfolio-swiper"
@@ -383,6 +430,9 @@ export default function FullWidthTabs() {
                         Description={project.Description}
                         Link={project.Link}
                         id={project.id}
+                        TechStack={project.TechStack}
+                        Github={project.Github}
+                        Features={project.Features}
                       />
                     </div>
                   ))}
@@ -405,11 +455,11 @@ export default function FullWidthTabs() {
                 <div className="grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4">
                   {displayedCertificates.map((certificate, index) => (
                     <div
-                      key={index}
+                      key={certificate.id || `cert-${index}`}
                       data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
                       data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
                     >
-                      <Certificate ImgSertif={certificate.Img} />
+                      <CertificateWithTheme CertificateImg={certificate.Img} />
                     </div>
                   ))}
                 </div>
@@ -435,7 +485,7 @@ export default function FullWidthTabs() {
                       data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
                       data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
                     >
-                      <TechStackIcon TechStackIcon={stack.icon} Language={stack.language} />
+                      <TechStackIcon icon={stack.icon} language={stack.language} />
                     </div>
                   ))}
                 </div>
@@ -447,3 +497,5 @@ export default function FullWidthTabs() {
     </div>
   );
 }
+
+export default Portfolio;

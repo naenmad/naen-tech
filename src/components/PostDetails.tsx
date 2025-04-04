@@ -1,53 +1,83 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-  ArrowLeft, Calendar, Clock, User, Tag, Share2, 
-  Bookmark, ThumbsUp, MessageSquare, ChevronRight, 
-  ExternalLink, BookOpen, Hash, FileText, Star, Layers
+  ArrowLeft,
+  Calendar,
+  Clock,
+  User,
+  Tag,
+  Share2,
+  Bookmark,
+  ThumbsUp,
+  ChevronRight,
+  ExternalLink,
+  BookOpen,
+  Hash,
+  FileText,
+  Star,
+  Layers,
 } from "lucide-react";
-import { db } from '../firebase';
-import { doc, getDoc, collection, query, where, limit, getDocs } from 'firebase/firestore';
-import { motion } from "framer-motion";
+import { db } from "../firebase";
+import { doc, getDoc, collection, query, where, limit, getDocs } from "firebase/firestore";
 
-const TagBadge = ({ tag }) => {
-  return (
-    <div className="group relative overflow-hidden px-3 py-2 md:px-4 md:py-2.5 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-xl border border-blue-500/10 hover:border-blue-500/30 transition-all duration-300 cursor-default">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/10 group-hover:to-purple-500/10 transition-all duration-500" />
-      <div className="relative flex items-center gap-1.5 md:gap-2">
-        <Hash className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-400 group-hover:text-blue-300 transition-colors" />
-        <span className="text-xs md:text-sm font-medium text-blue-300/90 group-hover:text-blue-200 transition-colors">
-          {tag}
-        </span>
+interface PostType {
+  id: string;
+  title: string;
+  date: string;
+  readTime: number;
+  author?: string;
+  category?: string;
+  tags?: string[];
+  content?: string;
+  excerpt?: string;
+  image?: string;
+}
+
+interface RelatedPostType {
+  id: string;
+  title: string;
+  date: string;
+  readTime: number;
+}
+
+const TagBadge: React.FC<{ tag: string }> = ({ tag }) => (
+  <div className="group relative overflow-hidden px-3 py-2 md:px-4 md:py-2.5 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-xl border border-blue-500/10 hover:border-blue-500/30 transition-all duration-300 cursor-default">
+    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/10 group-hover:to-purple-500/10 transition-all duration-500" />
+    <div className="relative flex items-center gap-1.5 md:gap-2">
+      <Hash className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-400 group-hover:text-blue-300 transition-colors" />
+      <span className="text-xs md:text-sm font-medium text-blue-300/90 group-hover:text-blue-200 transition-colors">
+        {tag}
+      </span>
+    </div>
+  </div>
+);
+
+const RelatedPostItem: React.FC<{ post: RelatedPostType; navigate: (path: string) => void }> = ({
+  post,
+  navigate,
+}) => (
+  <li
+    onClick={() => navigate(`/post/${post.id}`)}
+    className="group flex items-start space-x-3 p-2.5 md:p-3.5 rounded-xl hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/10 cursor-pointer"
+  >
+    <div className="relative mt-2">
+      <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur group-hover:opacity-100 opacity-0 transition-opacity duration-300" />
+      <div className="relative w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 group-hover:scale-125 transition-transform duration-300" />
+    </div>
+    <div className="flex-1">
+      <h4 className="text-sm md:text-base text-gray-300 group-hover:text-white transition-colors font-medium">
+        {post.title}
+      </h4>
+      <div className="flex items-center mt-1 space-x-2 text-xs text-gray-400">
+        <span>{post.date}</span>
+        <span>•</span>
+        <span>{post.readTime} min read</span>
       </div>
     </div>
-  );
-};
+  </li>
+);
 
-const RelatedPostItem = ({ post, navigate }) => {
-  return (
-    <li 
-      onClick={() => navigate(`/post/${post.id}`)}
-      className="group flex items-start space-x-3 p-2.5 md:p-3.5 rounded-xl hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/10 cursor-pointer"
-    >
-      <div className="relative mt-2">
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur group-hover:opacity-100 opacity-0 transition-opacity duration-300" />
-        <div className="relative w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 group-hover:scale-125 transition-transform duration-300" />
-      </div>
-      <div className="flex-1">
-        <h4 className="text-sm md:text-base text-gray-300 group-hover:text-white transition-colors font-medium">
-          {post.title}
-        </h4>
-        <div className="flex items-center mt-1 space-x-2 text-xs text-gray-400">
-          <span>{post.date}</span>
-          <span>•</span>
-          <span>{post.readTime} min read</span>
-        </div>
-      </div>
-    </li>
-  );
-};
-
-const PostStats = ({ post }) => {
+const PostStats: React.FC<{ post: PostType }> = ({ post }) => {
   const readTime = post?.readTime || 0;
   const tagsCount = post?.tags?.length || 0;
 
@@ -78,14 +108,32 @@ const PostStats = ({ post }) => {
   );
 };
 
-const PostDetails = () => {
-  const { id } = useParams();
+const PostDetails: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [post, setPost] = useState(null);
-  const [relatedPosts, setRelatedPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [post, setPost] = useState<PostType | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<RelatedPostType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [readingProgress, setReadingProgress] = useState<number>(0);
+  const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
+
+  // Handle scroll to track reading progress
+  useEffect(() => {
+    const updateReadingProgress = () => {
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight - windowHeight;
+      
+      if (docHeight) {
+        const progress = Math.floor((scrollPosition / docHeight) * 100);
+        setReadingProgress(progress);
+      }
+    };
+
+    window.addEventListener('scroll', updateReadingProgress);
+    return () => window.removeEventListener('scroll', updateReadingProgress);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -93,6 +141,13 @@ const PostDetails = () => {
     const fetchPost = async () => {
       try {
         setLoading(true);
+        
+        if (!id) {
+          setError("Post ID is missing");
+          setLoading(false);
+          return;
+        }
+        
         const postDoc = await getDoc(doc(db, 'posts', id));
         
         if (postDoc.exists()) {
@@ -104,7 +159,7 @@ const PostDetails = () => {
               day: 'numeric',
               year: 'numeric'
             }) || 'No date'
-          };
+          } as PostType;
           
           setPost(postData);
           
@@ -129,7 +184,7 @@ const PostDetails = () => {
                     day: 'numeric',
                     year: 'numeric'
                   }) || 'No date'
-                }));
+                })) as RelatedPostType[];
               
               setRelatedPosts(relatedData);
             } catch (relatedErr) {
@@ -141,7 +196,7 @@ const PostDetails = () => {
           console.log(`Document with ID ${id} not found`);
           setError("Post not found - No such document");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching post:", err.message);
         setError(`Failed to load post: ${err.message}`);
       } finally {
@@ -182,6 +237,13 @@ const PostDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#030014] px-[2%] sm:px-0 relative overflow-hidden">
+      <div className="fixed top-0 left-0 w-full h-1 z-50">
+        <div 
+          className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+          style={{ width: `${readingProgress}%` }}
+        ></div>
+      </div>
+
       {/* Background animations */}
       <div className="fixed inset-0">
         <div className="absolute -inset-[10px] opacity-20">
@@ -209,7 +271,7 @@ const PostDetails = () => {
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 md:gap-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-16">
             <div className="space-y-6 md:space-y-10 animate-slideInLeft">
               <div className="space-y-4 md:space-y-6">
                 <h1 className="text-3xl md:text-6xl font-bold bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight">
@@ -263,16 +325,40 @@ const PostDetails = () => {
                   </div>
                 </div>
               )}
+
+              {post.content && post.content.includes('<h2') && (
+                <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-colors duration-300">
+                  <h3 className="text-lg md:text-xl font-semibold text-white/90 flex items-center gap-2 md:gap-3 mb-4">
+                    <Layers className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+                    Table of Contents
+                  </h3>
+                  <div className="space-y-2">
+                    {/* This is a simplified example - you would need to parse actual headings */}
+                    <button className="w-full text-left px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm text-blue-200 flex items-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
+                      Introduction
+                    </button>
+                    <button className="w-full text-left px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm text-blue-200 flex items-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></div>
+                      Getting Started
+                    </button>
+                    {/* Add more sections as needed */}
+                  </div>
+                </div>
+              )}
               
               {/* Main content for article */}
-              <div className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-8 border border-white/10 space-y-6 hover:border-white/20 transition-colors duration-300">
+              <div className="bg-white/[0.03] backdrop-blur-xl rounded-2xl p-4 md:p-8 border border-white/10 space-y-6 hover:border-white/20 transition-colors duration-300">
                 <h3 className="text-xl font-semibold text-white/90 flex items-center gap-3">
                   <FileText className="w-5 h-5 text-blue-400" />
                   Article Content
                 </h3>
-                <div className="prose prose-invert prose-lg max-w-none">
+                <div className="prose prose-invert prose-lg max-w-none md:max-w-[650px] mx-auto">
                   {post.content ? (
-                    <div dangerouslySetInnerHTML={{ __html: post.content }} />
+                    <div 
+                      className="text-gray-300 [&>p]:mb-4 [&>h2]:text-xl [&>h2]:font-semibold [&>h2]:text-white/90 [&>h2]:mt-6 [&>h2]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>a]:text-blue-400 [&>a]:underline-offset-2" 
+                      dangerouslySetInnerHTML={{ __html: post.content }} 
+                    />
                   ) : (
                     <p className="text-gray-300">{post.excerpt}</p>
                   )}
@@ -281,15 +367,19 @@ const PostDetails = () => {
             </div>
 
             <div className="space-y-6 md:space-y-10 animate-slideInRight">
-              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <img
-                  src={post.image}
-                  alt={post.title}
-                  className="w-full object-cover transform transition-transform duration-700 will-change-transform group-hover:scale-105"
-                  onLoad={() => setIsImageLoaded(true)}
-                />
-                <div className="absolute inset-0 border-2 border-white/0 group-hover:border-white/10 transition-colors duration-300 rounded-2xl" />
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group h-[300px] md:h-[400px]">
+                <div className="absolute inset-0 bg-white/5 animate-pulse" 
+                     style={{ display: isImageLoaded ? 'none' : 'block' }} />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
+                {post.image && (
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className={`w-full h-full object-cover transform transition-transform duration-700 will-change-transform group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    onLoad={() => setIsImageLoaded(true)}
+                  />
+                )}
+                <div className="absolute inset-0 border-2 border-white/0 group-hover:border-white/10 transition-colors duration-300 rounded-2xl z-20" />
               </div>
 
               {/* Social sharing and actions - DISABLED */}
@@ -363,7 +453,7 @@ const PostDetails = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);

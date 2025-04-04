@@ -12,17 +12,17 @@ const Skills = () => {
     {
       title: "Backend Development",
       icon: Server,
-      skills: ["Node.js", "Express.js", "REST API", "GraphQL", "MongoDB", "Firebase", "Authentication", "Authorization"]
+      skills: ["Node.js", "Express.js", "REST API", "MongoDB", "Firebase", "Authentication", "Authorization"]
     },
     {
       title: "Mobile Development",
       icon: Globe,
-      skills: ["React Native", "Expo", "Android Studio", "iOS Development", "App Store Deployment"]
+      skills: ["React Native", "Flutter", "Android Studio"]
     },
     {
       title: "Database",
       icon: Database,
-      skills: ["MongoDB", "MySQL", "PostgreSQL", "Firebase Firestore", "Redis"]
+      skills: ["MongoDB", "MySQL", "PostgreSQL", "Firebase Firestore", ]
     },
     {
       title: "DevOps & Tools",
@@ -32,7 +32,7 @@ const Skills = () => {
   ];
 
   return (
-    <section id="Skills" className="relative py-20 bg-[#030014] overflow-hidden">
+    <section id="Skills" className="relative py-20 overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 right-0 w-3/4 h-1/2 bg-indigo-900/5 rounded-full blur-[120px] -translate-y-1/2"></div>

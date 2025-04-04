@@ -6,7 +6,20 @@ import {
 } from "lucide-react";
 import Swal from 'sweetalert2';
 
-const TECH_ICONS = {
+// Project type definition
+interface ProjectType {
+  id: string;
+  Title: string;
+  Description: string;
+  Img: string;
+  Link: string;
+  Github: string;
+  TechStack: string[];
+  Features: string[];
+}
+
+// Tech icon mapping
+const TECH_ICONS: Record<string, React.ElementType> = {
   React: Globe,
   Tailwind: Layout,
   Express: Cpu,
@@ -17,7 +30,11 @@ const TECH_ICONS = {
   default: Package,
 };
 
-const TechBadge = ({ tech }) => {
+interface TechBadgeProps {
+  tech: string;
+}
+
+const TechBadge: React.FC<TechBadgeProps> = ({ tech }) => {
   const Icon = TECH_ICONS[tech] || TECH_ICONS["default"];
   
   return (
@@ -33,7 +50,11 @@ const TechBadge = ({ tech }) => {
   );
 };
 
-const FeatureItem = ({ feature }) => {
+interface FeatureItemProps {
+  feature: string;
+}
+
+const FeatureItem: React.FC<FeatureItemProps> = ({ feature }) => {
   return (
     <li className="group flex items-start space-x-3 p-2.5 md:p-3.5 rounded-xl hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-white/10">
       <div className="relative mt-2">
@@ -47,7 +68,11 @@ const FeatureItem = ({ feature }) => {
   );
 };
 
-const ProjectStats = ({ project }) => {
+interface ProjectStatsProps {
+  project: ProjectType;
+}
+
+const ProjectStats: React.FC<ProjectStatsProps> = ({ project }) => {
   const techStackCount = project?.TechStack?.length || 0;
   const featuresCount = project?.Features?.length || 0;
 
@@ -78,7 +103,8 @@ const ProjectStats = ({ project }) => {
   );
 };
 
-const handleGithubClick = (githubLink) => {
+// Helper functions
+const handleGithubClick = (githubLink: string): boolean => {
   if (githubLink === 'Private') {
     Swal.fire({
       icon: 'info',
@@ -94,29 +120,42 @@ const handleGithubClick = (githubLink) => {
   return true;
 };
 
-const ProjectDetails = () => {
-  const { id } = useParams();
+const ProjectDetails: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [project, setProject] = useState(null);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [project, setProject] = useState<ProjectType | null>(null);
+  const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    const storedProjects = JSON.parse(localStorage.getItem("projects")) || [];
-    const selectedProject = storedProjects.find((p) => String(p.id) === id);
+    setIsLoading(true);
     
-    if (selectedProject) {
-      const enhancedProject = {
-        ...selectedProject,
-        Features: selectedProject.Features || [],
-        TechStack: selectedProject.TechStack || [],
-        Github: selectedProject.Github || 'https://github.com/EkiZR',
-      };
-      setProject(enhancedProject);
+    try {
+      const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]") as ProjectType[];
+      const selectedProject = storedProjects.find((p) => String(p.id) === id);
+      
+      if (selectedProject) {
+        const enhancedProject: ProjectType = {
+          ...selectedProject,
+          Features: selectedProject.Features || [],
+          TechStack: selectedProject.TechStack || [],
+          Github: selectedProject.Github || 'https://github.com/EkiZR',
+        };
+        setProject(enhancedProject);
+      } else {
+        setError('Project not found. The project may have been removed or the URL is incorrect.');
+      }
+    } catch (err) {
+      console.error('Error loading project data:', err);
+      setError('Failed to load project data. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   }, [id]);
 
-  if (!project) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#030014] flex items-center justify-center">
         <div className="text-center space-y-6 animate-fadeIn">
@@ -127,9 +166,31 @@ const ProjectDetails = () => {
     );
   }
 
+  if (error || !project) {
+    return (
+      <div className="min-h-screen bg-[#030014] flex items-center justify-center px-4">
+        <div className="text-center space-y-6 animate-fadeIn max-w-md">
+          <div className="w-20 h-20 mx-auto text-red-400">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl md:text-3xl font-bold text-white">{error || "Project Not Found"}</h2>
+          <p className="text-gray-400">The project you're looking for might have been removed or is temporarily unavailable.</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Projects
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#030014] px-[2%] sm:px-0 relative overflow-hidden">
-      {/* Background animations remain unchanged */}
+      {/* Background animations */}
       <div className="fixed inset-0">
         <div className="absolute -inset-[10px] opacity-20">
           <div className="absolute top-0 -left-4 w-72 md:w-96 h-72 md:h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob" />
@@ -221,13 +282,18 @@ const ProjectDetails = () => {
 
             <div className="space-y-6 md:space-y-10 animate-slideInRight">
               <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
-              
+                <div className="absolute inset-0 bg-white/5 animate-pulse" 
+                     style={{ display: isImageLoaded ? 'none' : 'block' }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <img
                   src={project.Img}
                   alt={project.Title}
-                  className="w-full  object-cover transform transition-transform duration-700 will-change-transform group-hover:scale-105"
+                  className={`w-full object-cover transform transition-transform duration-700 will-change-transform group-hover:scale-105 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   onLoad={() => setIsImageLoaded(true)}
+                  onError={() => {
+                    console.error("Failed to load image:", project.Img);
+                    setIsImageLoaded(true); // Still set to true to remove loading state
+                  }}
                 />
                 <div className="absolute inset-0 border-2 border-white/0 group-hover:border-white/10 transition-colors duration-300 rounded-2xl" />
               </div>
@@ -253,7 +319,7 @@ const ProjectDetails = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0% {
             transform: translate(0px, 0px) scale(1);

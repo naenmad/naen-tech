@@ -3,8 +3,18 @@ import { FileText, Code, Award, Globe, ArrowUpRight, Sparkles, UserCheck } from 
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 
+// Define types for components
+interface StatCardProps {
+  icon: React.ElementType;
+  color: string;
+  value: number;
+  label: string;
+  description: string;
+  animation: string;
+}
+
 // Memoized Components
-const Header = memo(() => (
+const Header: React.FC = memo(() => (
   <div className="text-center lg:mb-8 mb-2 px-[5%]">
     <div className="inline-block relative group">
       <h2 
@@ -27,7 +37,7 @@ const Header = memo(() => (
   </div>
 ));
 
-const ProfileImage = memo(() => (
+const ProfileImage: React.FC = memo(() => (
   <div className="flex justify-end items-center sm:p-12 sm:py-0 sm:pb-0 p-0 py-2 pb-2">
     <div 
       className="relative group" 
@@ -68,7 +78,7 @@ const ProfileImage = memo(() => (
   </div>
 ));
 
-const StatCard = memo(({ icon: Icon, color, value, label, description, animation }) => (
+const StatCard: React.FC<StatCardProps> = memo(({ icon: Icon, color, value, label, description, animation }) => (
   <div data-aos={animation} data-aos-duration={1300} className="relative group">
     <div className="relative z-10 bg-gray-900/50 backdrop-blur-lg rounded-2xl p-6 border border-white/10 overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl h-full flex flex-col justify-between">
       <div className={`absolute -z-10 inset-0 bg-gradient-to-br ${color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`}></div>
@@ -112,9 +122,15 @@ const StatCard = memo(({ icon: Icon, color, value, label, description, animation
   </div>
 ));
 
-const AboutPage = () => {
+interface StatsData {
+  totalProjects: number;
+  totalCertificates: number;
+  YearExperience: number;
+}
+
+const AboutPage: React.FC = () => {
   // Memoized calculations
-  const { totalProjects, totalCertificates, YearExperience } = useMemo(() => {
+  const { totalProjects, totalCertificates, YearExperience }: StatsData = useMemo(() => {
     const storedProjects = JSON.parse(localStorage.getItem("projects") || "[]");
     const storedCertificates = JSON.parse(localStorage.getItem("certificates") || "[]");
     
@@ -141,7 +157,7 @@ const AboutPage = () => {
     initAOS();
     
     // Debounced resize handler
-    let resizeTimer;
+    let resizeTimer: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(initAOS, 250);
@@ -155,7 +171,7 @@ const AboutPage = () => {
   }, []);
 
   // Memoized stats data
-  const statsData = useMemo(() => [
+  const statsData: StatCardProps[] = useMemo(() => [
     {
       icon: Code,
       color: "from-[#6366f1] to-[#a855f7]",
@@ -254,24 +270,23 @@ const AboutPage = () => {
         </a>
       </div>
 
-      <style>
-        {`
-          @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-          }
-          @keyframes spin-slower {
-            to { transform: rotate(360deg); }
-          }
-          .animate-bounce-slow {
-            animation: bounce 3s infinite;
-          }
-          .animate-pulse-slow {
-            animation: pulse 3s infinite;
-          }
-          .animate-spin-slower {
-            animation: spin-slower 8s linear infinite;
-          }
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes spin-slower {
+          to { transform: rotate(360deg); }
+        }
+        .animate-bounce-slow {
+          animation: bounce 3s infinite;
+        }
+        .animate-pulse-slow {
+          animation: pulse 3s infinite;
+        }
+        .animate-spin-slower {
+          animation: spin-slower 8s linear infinite;
+        }
       `}</style>
     </div>
   );

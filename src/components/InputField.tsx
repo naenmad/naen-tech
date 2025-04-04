@@ -1,6 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, FC } from "react";
 
-const InputField = ({ field, label, icon: Icon, formData, handleChange }) => {
+// Tipe Props untuk InputField
+interface InputFieldProps {
+  field: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  formData: Record<string, string>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+}
+
+const InputField: FC<InputFieldProps> = ({ field, label, icon: Icon, formData, handleChange }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   // Helper function to generate input classes dynamically
@@ -26,7 +35,7 @@ const InputField = ({ field, label, icon: Icon, formData, handleChange }) => {
           id={field}
           name={field}
           placeholder={label}
-          value={formData[field]}
+          value={formData[field] || ""}
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -42,7 +51,7 @@ const InputField = ({ field, label, icon: Icon, formData, handleChange }) => {
         type={field === "email" ? "email" : "text"}
         name={field}
         placeholder={label}
-        value={formData[field]}
+        value={formData[field] || ""}
         onChange={handleChange}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
@@ -56,7 +65,7 @@ const InputField = ({ field, label, icon: Icon, formData, handleChange }) => {
     <div className="relative w-full group">
       {/* Icon and Label */}
       <div className="absolute left-4 top-4 flex items-center space-x-2 text-gray-400 transition-colors group-hover:text-[#6366f1]">
-        <Icon className="w-5 h-5" />
+        {Icon && <Icon className="w-5 h-5" />}
         <label
           htmlFor={field}
           className={`
