@@ -16,9 +16,6 @@ RUN npm install -g ts-node
 # Copy the rest of the code
 COPY . .
 
-# Add start script to package.json
-RUN sed -i '/"scripts": {/a \ \ \ \ "start": "nginx -g '\''daemon off;'\''",' package.json
-
 # Build the app
 RUN npm run build
 
@@ -31,8 +28,12 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # Copy custom Nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80
-EXPOSE 80
+# Explicitly modify default Nginx port
+RUN sed -i 's/listen\s*80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
+RUN sed -i 's/^\s*listen\s*\[::\]:80;/listen [::]:8080;/g' /etc/nginx/conf.d/default.conf
+
+# Expose port 8080
+EXPOSE 8080
 
 # Start Nginx server
 CMD ["nginx", "-g", "daemon off;"]
