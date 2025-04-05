@@ -29,7 +29,7 @@ const Experience = () => {
           "Monitored and evaluated the progress of division initiatives, implementing adjustments as needed to maximize impact.",
           "Facilitated regular team meetings to coordinate activities, address challenges, and foster a collaborative working environment."
       ]
-  }
+    },
     {
       title: "Laboratory Assistant",
       company: "Laboratory of Computer Science, Universitas Singaperbangsa Karawang",
