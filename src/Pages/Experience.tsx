@@ -5,15 +5,15 @@ import { Briefcase, MapPin, CalendarDays } from 'lucide-react';
 const Experience = () => {
   const experiences = [
     {
-      title: "Senior Software Engineer",
-      company: "Tech Innovations Inc.",
-      location: "Jakarta, Indonesia",
-      period: "Jan 2022 - Present",
-      description: "Lead frontend developer for enterprise SaaS platform using React, TypeScript and GraphQL. Implemented CI/CD pipelines that reduced deployment time by 40%. Mentored junior developers and conducted code reviews.",
+      title: "Staff of Education Division",
+      company: "Himpunan Mahasiswa Informatika Universitas Singaperbangsa Karawang",
+      location: "Karawang, Indonesia",
+      period: "Dec 2023 - Nov 2024",
+      description: "As Chief Executive of Pekan IT 2024, I spearheaded the design and execution of a series of educational events, encompassing a National Seminar, Webinar, Workshop, and Competition. My leadership encompassed concept development, cross-functional coordination, budget oversight, and post-event evaluation.",
       achievements: [
-        "Reduced application load time by 60% through code optimization",
-        "Implemented responsive design patterns that increased mobile usage by 35%",
-        "Developed reusable component library that increased development speed"
+        "Pekan IT 2024 successfully engaged participants from 36 universities across Indonesia.",
+        "The event attracted 170 competitors.",
+        "There were 600 webinar attendees and 600 seminar and workshop participants."
       ]
     },
     {
