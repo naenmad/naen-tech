@@ -17,29 +17,33 @@ const Experience = () => {
       ]
     },
     {
-      title: "Full Stack Developer",
-      company: "Digital Solutions",
-      location: "Bogor, Indonesia",
-      period: "Mar 2020 - Dec 2021",
-      description: "Developed and maintained web applications for clients in finance and e-commerce sectors. Created robust RESTful APIs and implemented responsive UIs using React and Node.js.",
+      title: "Head of Education Division",
+      company: "Himpunan Mahasiswa Informatika Universitas Singaperbangsa Karawang",
+      location: "Karawang, Indonesia",
+      period: "Dec 2024 - Now",
+      description: "Responsible for leading and managing the Education Division, including planning and overseeing the execution of educational programs and activities. Supervised team members, delegated tasks, and ensured the effective implementation of division initiatives to achieve organizational goals.",
       achievements: [
-        "Built authentication system with multi-factor authentication",
-        "Integrated payment gateways for e-commerce platforms",
-        "Implemented real-time notifications using WebSockets"
+          "Led a team of 9 members in the Education Division, providing guidance and support to ensure successful program delivery.",
+          "Developed and implemented 5 educational programs/activities, including Workshop, Seminar, Webinar, and Incubating Students Skills and reaching total 1.000+ participants.",
+          "Managed the division's budget and resources effectively, ensuring optimal allocation for program implementation.",
+          "Monitored and evaluated the progress of division initiatives, implementing adjustments as needed to maximize impact.",
+          "Facilitated regular team meetings to coordinate activities, address challenges, and foster a collaborative working environment."
       ]
-    },
+  }
     {
-      title: "Frontend Developer",
-      company: "Creative Web Solutions",
-      location: "Bandung, Indonesia",
-      period: "Jun 2018 - Feb 2020",
-      description: "Responsible for implementing responsive designs and interactive UI components for client websites. Worked directly with designers to translate mockups into functional interfaces.",
+      title: "Laboratory Assistant",
+      company: "Laboratory of Computer Science, Universitas Singaperbangsa Karawang",
+      location: "Karawang, Indonesia",
+      period: "Jan 2025 - Now",
+      description: "Responsible for assisting in teaching software related courses and Multimedia Staff that creating and managing laboratory publications, and maintaining the laboratory's digital presence.",
       achievements: [
-        "Developed custom React components for company component library",
-        "Improved website accessibility to meet WCAG standards",
-        "Reduced bug rate by implementing comprehensive testing strategies"
+          "Developed and delivered supplementary teaching materials for software related courses.",
+          "Created and managed the laboratory's social media and website content, increasing online engagement by [masukkan persentase atau metrik jika ada].",
+          "Organized and published research and project documentation, improving accessibility and dissemination of laboratory work.",
+          "Provided technical support and guidance to students during practical sessions and projects.",
+          "Implemented a digital content management system for laboratory resources, streamlining access for students and faculty."
       ]
-    }
+  }
   ];
 
   return (
