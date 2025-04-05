@@ -16,6 +16,9 @@ RUN npm install -g ts-node
 # Copy the rest of the code
 COPY . .
 
+# Add start script to package.json
+RUN sed -i '/"scripts": {/a \ \ \ \ "start": "nginx -g '\''daemon off;'\''",' package.json
+
 # Build the app
 RUN npm run build
 
