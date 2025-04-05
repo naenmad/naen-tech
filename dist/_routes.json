@@ -1,0 +1,19 @@
+{
+  "routes": [
+    {
+      "src": "^/index\\.(js|css)$",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" }
+    },
+    {
+      "src": "^/(.*\\.(jpg|jpeg|gif|png|ico|svg|webp))$",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" }
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "dest": "/index.html"
+    }
+  ]
+}
