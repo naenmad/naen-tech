@@ -7,7 +7,7 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [react()],
   
-  // Change from absolute to relative paths to fix 404 errors
+  // Critical: use relative paths instead of absolute
   base: './',
   
   // Define public directory
@@ -21,6 +21,8 @@ export default defineConfig({
   },
   
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
     // Disable asset inlining to ensure files are properly referenced
     assetsInlineLimit: 0,
     
