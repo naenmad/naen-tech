@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [react()],
   
   // Critical: use relative paths instead of absolute
-  base: './',
+  base: '', // Empty string for root-relative paths
   
   // Define public directory
   publicDir: 'public',
@@ -22,7 +22,7 @@ export default defineConfig({
   
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
+    assetsDir: '', // Don't put everything in /assets/
     // Disable asset inlining to ensure files are properly referenced
     assetsInlineLimit: 0,
     
@@ -32,9 +32,9 @@ export default defineConfig({
     // Configure asset handling
     rollupOptions: {
       output: {
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
+        entryFileNames: 'index.js', // Specify exact output file names without hash
+        chunkFileNames: '[name].js',
+        assetFileNames: '[name].[ext]'
       }
     }
   },
