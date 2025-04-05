@@ -3,7 +3,7 @@ static_sites:
 - name: web
   environment_slug: html
   github:
-    repo: yourusername/naen-tech
+    repo: naenmad/naen-tech
     branch: main
     deploy_on_push: true
   build_command: npm ci && npm run build
